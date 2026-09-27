@@ -1,0 +1,551 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sheet Yield Tracker</title>
+<style>
+  :root {
+    --bg: #f5f6f8;
+    --panel: #ffffff;
+    --text: #1d2330;
+    --muted: #5d6677;
+    --border: #d9dde5;
+    --accent: #2f6fb0;
+    --accent-text: #ffffff;
+    --good: #2e7d4f;
+    --warn: #a86b00;
+    --bad: #b3261e;
+    --bar: #2f6fb0;
+    --grid: #e6e9ef;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #14171c;
+      --panel: #1d2128;
+      --text: #e6e9ef;
+      --muted: #9aa3b2;
+      --border: #333a45;
+      --accent: #5b9bd8;
+      --accent-text: #0e1115;
+      --good: #5cc28a;
+      --warn: #e0a83a;
+      --bad: #f07268;
+      --bar: #5b9bd8;
+      --grid: #2a3039;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #14171c;
+    --panel: #1d2128;
+    --text: #e6e9ef;
+    --muted: #9aa3b2;
+    --border: #333a45;
+    --accent: #5b9bd8;
+    --accent-text: #0e1115;
+    --good: #5cc28a;
+    --warn: #e0a83a;
+    --bad: #f07268;
+    --bar: #5b9bd8;
+    --grid: #2a3039;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font: 15px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  main { max-width: 1200px; margin: 0 auto; padding: 24px 16px 48px; }
+  h1 { font-size: 1.5rem; margin: 0 0 4px; }
+  h2 { font-size: 1.1rem; margin: 0 0 12px; }
+  p.sub { margin: 0 0 20px; color: var(--muted); }
+  section {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 18px;
+    margin-bottom: 18px;
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+    gap: 12px;
+  }
+  fieldset { border: none; padding: 0; margin: 0 0 16px; }
+  legend { font-weight: 600; margin-bottom: 8px; font-size: .9rem; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+  label { display: flex; flex-direction: column; gap: 4px; font-size: .85rem; color: var(--muted); }
+  input, select, textarea {
+    font: inherit;
+    color: var(--text);
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 7px 9px;
+    width: 100%;
+  }
+  input:focus, select:focus, textarea:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
+  button {
+    font: inherit;
+    border: 1px solid var(--border);
+    background: var(--panel);
+    color: var(--text);
+    border-radius: 6px;
+    padding: 7px 14px;
+    cursor: pointer;
+  }
+  button.primary { background: var(--accent); color: var(--accent-text); border-color: var(--accent); font-weight: 600; }
+  button.link { border: none; background: none; color: var(--accent); padding: 2px 6px; }
+  button.link.danger { color: var(--bad); }
+  .actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .preview {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 10px;
+    margin: 4px 0 16px;
+    padding: 12px;
+    border: 1px dashed var(--border);
+    border-radius: 8px;
+  }
+  .stat { display: flex; flex-direction: column; }
+  .stat .k { font-size: .78rem; color: var(--muted); }
+  .stat .v { font-size: 1.15rem; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .kpis { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; }
+  .kpi { border: 1px solid var(--border); border-radius: 8px; padding: 12px; }
+  .kpi .v { font-size: 1.5rem; }
+  .good { color: var(--good); }
+  .warn { color: var(--warn); }
+  .bad { color: var(--bad); }
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: .88rem; font-variant-numeric: tabular-nums; }
+  th, td { padding: 7px 8px; border-bottom: 1px solid var(--border); text-align: right; white-space: nowrap; }
+  th { color: var(--muted); font-weight: 600; cursor: pointer; user-select: none; }
+  th:first-child, td:first-child, th.l, td.l { text-align: left; }
+  tbody tr:hover { background: var(--bg); }
+  .filters { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 12px; }
+  .filters label { flex: 1 1 150px; }
+  .empty { color: var(--muted); padding: 16px 0; text-align: center; }
+  #chart svg { width: 100%; height: auto; display: block; }
+  #chart text { fill: var(--muted); font-size: 11px; }
+  .note { font-size: .8rem; color: var(--muted); margin-top: 8px; }
+  .hidden { display: none; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Stainless Steel Sheet Yield Tracker</h1>
+  <p class="sub">Log sheets cut and parts produced, then see material yield, scrap weight and trends. Data is saved in this browser.</p>
+
+  <section>
+    <h2 id="formTitle">New entry</h2>
+    <form id="entryForm" autocomplete="off">
+      <input type="hidden" id="editId">
+      <fieldset>
+        <legend>Job</legend>
+        <div class="grid">
+          <label>Date<input type="date" id="date" required></label>
+          <label>Job / order no.<input type="text" id="job" placeholder="e.g. WO-1042"></label>
+          <label>Part name<input type="text" id="part" placeholder="e.g. Bracket A"></label>
+          <label>Operator<input type="text" id="operator"></label>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Sheet</legend>
+        <div class="grid">
+          <label>Grade
+            <select id="grade">
+              <option value="304">304 / 304L</option>
+              <option value="316">316 / 316L</option>
+              <option value="430">430</option>
+              <option value="201">201</option>
+              <option value="409">409</option>
+              <option value="2205">2205 Duplex</option>
+              <option value="other">Other</option>
+            </select>
+          </label>
+          <label>Density (g/cm³)<input type="number" id="density" step="0.01" min="0" required></label>
+          <label>Finish
+            <select id="finish">
+              <option>2B</option><option>BA</option><option>No.4 / Brushed</option>
+              <option>No.1 / HRAP</option><option>Mirror / No.8</option><option>Other</option>
+            </select>
+          </label>
+          <label>Thickness (mm)<input type="number" id="thickness" step="0.01" min="0" required></label>
+          <label>Sheet length (mm)<input type="number" id="sheetL" step="0.1" min="0" required value="2438"></label>
+          <label>Sheet width (mm)<input type="number" id="sheetW" step="0.1" min="0" required value="1219"></label>
+          <label>Sheets used<input type="number" id="sheets" step="1" min="1" required value="1"></label>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Parts</legend>
+        <div class="grid">
+          <label>Part length (mm)<input type="number" id="partL" step="0.1" min="0"></label>
+          <label>Part width (mm)<input type="number" id="partW" step="0.1" min="0"></label>
+          <label>Net area / part (mm²)<input type="number" id="partArea" step="1" min="0" placeholder="optional, for non-rectangular parts"></label>
+          <label>Good parts produced<input type="number" id="goodParts" step="1" min="0" required></label>
+          <label>Rejected parts<input type="number" id="rejects" step="1" min="0" value="0"></label>
+          <label>Reusable offcut (kg)<input type="number" id="offcut" step="0.01" min="0" value="0"></label>
+          <label>Kerf / gap (mm)<input type="number" id="kerf" step="0.1" min="0" value="0"></label>
+        </div>
+        <label style="margin-top:12px">Notes<textarea id="notes" rows="2"></textarea></label>
+      </fieldset>
+
+      <div class="preview" id="preview"></div>
+
+      <div class="actions">
+        <button type="submit" class="primary" id="submitBtn">Save entry</button>
+        <button type="button" id="cancelEdit" class="hidden">Cancel edit</button>
+        <button type="button" id="resetBtn">Clear</button>
+      </div>
+      <p class="note">Yield = net area of good parts ÷ total sheet area. If "Net area / part" is blank, part length × width is used. Best-fit nest shows how many rectangular parts would fit on one sheet (grid layout, either orientation) for comparison.</p>
+    </form>
+  </section>
+
+  <section>
+    <h2>Summary</h2>
+    <div class="kpis" id="kpis"></div>
+  </section>
+
+  <section>
+    <h2>Yield by entry</h2>
+    <div id="chart"></div>
+  </section>
+
+  <section>
+    <h2>Entries</h2>
+    <div class="filters">
+      <label>Search<input type="search" id="fSearch" placeholder="job, part, operator, notes"></label>
+      <label>Grade<select id="fGrade"><option value="">All</option></select></label>
+      <label>Thickness<select id="fThick"><option value="">All</option></select></label>
+      <label>From<input type="date" id="fFrom"></label>
+      <label>To<input type="date" id="fTo"></label>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th data-k="date">Date</th>
+            <th data-k="job" class="l">Job</th>
+            <th data-k="part" class="l">Part</th>
+            <th data-k="grade" class="l">Grade</th>
+            <th data-k="thickness">t (mm)</th>
+            <th data-k="sheets">Sheets</th>
+            <th data-k="sheetKg">Sheet kg</th>
+            <th data-k="goodParts">Parts</th>
+            <th data-k="partKg">Parts kg</th>
+            <th data-k="scrapKg">Scrap kg</th>
+            <th data-k="yieldPct">Yield</th>
+            <th data-k="nestPct">Nest max</th>
+            <th class="l"></th>
+          </tr>
+        </thead>
+        <tbody id="rows"></tbody>
+      </table>
+    </div>
+    <div class="actions" style="margin-top:14px">
+      <button type="button" id="exportCsv">Export CSV</button>
+      <button type="button" id="exportJson">Export backup (JSON)</button>
+      <button type="button" id="importBtn">Import backup</button>
+      <input type="file" id="importFile" accept=".json,application/json" class="hidden">
+      <button type="button" id="clearAll" class="link danger">Delete all</button>
+    </div>
+  </section>
+</main>
+
+<script>
+(() => {
+  const STORE_KEY = 'ss-sheet-yield-v1';
+  const DENSITY = { '304': 7.93, '316': 7.98, '430': 7.70, '201': 7.80, '409': 7.70, '2205': 7.80, 'other': 7.90 };
+  const $ = id => document.getElementById(id);
+  const fmt = (n, d = 1) => Number.isFinite(n) ? n.toLocaleString(undefined, { minimumFractionDigits: d, maximumFractionDigits: d }) : '–';
+  const num = id => parseFloat($(id).value);
+
+  let entries = load();
+  let sort = { k: 'date', dir: -1 };
+
+  function load() {
+    try { return JSON.parse(localStorage.getItem(STORE_KEY)) || []; } catch { return []; }
+  }
+  function save() {
+    try { localStorage.setItem(STORE_KEY, JSON.stringify(entries)); } catch { alert('Could not save to browser storage. Export a backup to keep your data.'); }
+  }
+
+  // Max rectangular parts per sheet using a simple grid in either orientation.
+  function nestCount(SL, SW, pL, pW, kerf) {
+    if (!(pL > 0 && pW > 0)) return NaN;
+    const fit = (a, b) => Math.floor((a + kerf) / (b + kerf));
+    return Math.max(fit(SL, pL) * fit(SW, pW), fit(SL, pW) * fit(SW, pL));
+  }
+
+  function compute(e) {
+    const sheetArea = e.sheetL * e.sheetW;                // mm² per sheet
+    const totalArea = sheetArea * e.sheets;
+    const partArea = e.partArea > 0 ? e.partArea : e.partL * e.partW;
+    const kgPerMm2 = e.thickness * e.density / 1e6;      // mm × g/cm³ → kg/mm²
+    const sheetKg = totalArea * kgPerMm2;
+    const partKg = partArea * e.goodParts * kgPerMm2;
+    const rejectKg = partArea * (e.rejects || 0) * kgPerMm2;
+    const offcut = e.offcut || 0;
+    const scrapKg = Math.max(0, sheetKg - partKg - offcut);
+    const yieldPct = totalArea > 0 ? (partArea * e.goodParts) / totalArea * 100 : NaN;
+    const effPct = sheetKg > 0 ? (partKg + offcut) / sheetKg * 100 : NaN;
+    const perSheet = nestCount(e.sheetL, e.sheetW, e.partL, e.partW, e.kerf || 0);
+    const nestPct = perSheet > 0 ? perSheet * partArea / sheetArea * 100 : NaN;
+    return { ...e, partAreaUsed: partArea, sheetKg, partKg, rejectKg, scrapKg, yieldPct, effPct, perSheet, nestPct };
+  }
+
+  function yieldClass(p) { return !Number.isFinite(p) ? '' : p >= 80 ? 'good' : p >= 65 ? 'warn' : 'bad'; }
+
+  function readForm() {
+    return {
+      date: $('date').value,
+      job: $('job').value.trim(),
+      part: $('part').value.trim(),
+      operator: $('operator').value.trim(),
+      grade: $('grade').value,
+      density: num('density'),
+      finish: $('finish').value,
+      thickness: num('thickness'),
+      sheetL: num('sheetL'),
+      sheetW: num('sheetW'),
+      sheets: num('sheets'),
+      partL: num('partL') || 0,
+      partW: num('partW') || 0,
+      partArea: num('partArea') || 0,
+      goodParts: num('goodParts'),
+      rejects: num('rejects') || 0,
+      offcut: num('offcut') || 0,
+      kerf: num('kerf') || 0,
+      notes: $('notes').value.trim(),
+    };
+  }
+
+  function fillForm(e) {
+    for (const k of ['date','job','part','operator','grade','density','finish','thickness','sheetL','sheetW','sheets','goodParts','rejects','offcut','kerf','notes']) $(k).value = e[k] ?? '';
+    $('partL').value = e.partL || '';
+    $('partW').value = e.partW || '';
+    $('partArea').value = e.partArea || '';
+  }
+
+  function updatePreview() {
+    const e = readForm();
+    const c = compute(e);
+    const partOk = c.partAreaUsed > 0 && e.goodParts >= 0;
+    const stats = [
+      ['Sheet weight', Number.isFinite(c.sheetKg) ? fmt(c.sheetKg, 2) + ' kg' : '–'],
+      ['Parts weight', partOk ? fmt(c.partKg, 2) + ' kg' : '–'],
+      ['Scrap', partOk ? fmt(c.scrapKg, 2) + ' kg' : '–'],
+      ['Yield', partOk ? `<span class="${yieldClass(c.yieldPct)}">${fmt(c.yieldPct)}%</span>` : '–'],
+      ['Incl. offcut', partOk ? fmt(c.effPct) + '%' : '–'],
+      ['Best-fit nest', Number.isFinite(c.perSheet) ? `${c.perSheet} / sheet (${fmt(c.nestPct)}%)` : '–'],
+    ];
+    $('preview').innerHTML = stats.map(([k, v]) => `<div class="stat"><span class="k">${k}</span><span class="v">${v}</span></div>`).join('');
+  }
+
+  function filtered() {
+    const q = $('fSearch').value.toLowerCase();
+    const g = $('fGrade').value, t = $('fThick').value, from = $('fFrom').value, to = $('fTo').value;
+    return entries.map(compute).filter(e =>
+      (!g || e.grade === g) &&
+      (!t || String(e.thickness) === t) &&
+      (!from || e.date >= from) &&
+      (!to || e.date <= to) &&
+      (!q || [e.job, e.part, e.operator, e.notes].join(' ').toLowerCase().includes(q))
+    );
+  }
+
+  function refreshFilterOptions() {
+    const setOpts = (sel, values, label) => {
+      const cur = sel.value;
+      sel.innerHTML = '<option value="">All</option>' + values.map(v => `<option value="${v}">${label(v)}</option>`).join('');
+      if (values.map(String).includes(cur)) sel.value = cur;
+    };
+    setOpts($('fGrade'), [...new Set(entries.map(e => e.grade))].sort(), v => v);
+    setOpts($('fThick'), [...new Set(entries.map(e => e.thickness))].sort((a, b) => a - b), v => v + ' mm');
+  }
+
+  const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+  function renderTable(list) {
+    const rows = [...list].sort((a, b) => {
+      const x = a[sort.k], y = b[sort.k];
+      return (typeof x === 'number' ? x - y : String(x).localeCompare(String(y))) * sort.dir;
+    });
+    $('rows').innerHTML = rows.length ? rows.map(e => `
+      <tr title="${esc(e.notes)}">
+        <td>${esc(e.date)}</td>
+        <td class="l">${esc(e.job)}</td>
+        <td class="l">${esc(e.part)}</td>
+        <td class="l">${esc(e.grade)} ${esc(e.finish)}</td>
+        <td>${fmt(e.thickness, 2)}</td>
+        <td>${e.sheets}</td>
+        <td>${fmt(e.sheetKg, 1)}</td>
+        <td>${e.goodParts}${e.rejects ? ` <span class="bad">(+${e.rejects})</span>` : ''}</td>
+        <td>${fmt(e.partKg, 1)}</td>
+        <td>${fmt(e.scrapKg, 1)}</td>
+        <td class="${yieldClass(e.yieldPct)}"><strong>${fmt(e.yieldPct)}%</strong></td>
+        <td>${Number.isFinite(e.nestPct) ? fmt(e.nestPct) + '%' : '–'}</td>
+        <td class="l"><button class="link" data-edit="${e.id}">Edit</button><button class="link danger" data-del="${e.id}">Delete</button></td>
+      </tr>`).join('') : `<tr><td colspan="13" class="empty">No entries yet. Add one above.</td></tr>`;
+    document.querySelectorAll('th[data-k]').forEach(th => {
+      th.textContent = th.textContent.replace(/ [▲▼]$/, '') + (th.dataset.k === sort.k ? (sort.dir > 0 ? ' ▲' : ' ▼') : '');
+    });
+  }
+
+  function renderKpis(list) {
+    const sum = k => list.reduce((s, e) => s + (e[k] || 0), 0);
+    const sheetKg = sum('sheetKg'), partKg = sum('partKg'), scrapKg = sum('scrapKg'), offcut = sum('offcut');
+    const totalArea = list.reduce((s, e) => s + e.sheetL * e.sheetW * e.sheets, 0);
+    const partArea = list.reduce((s, e) => s + e.partAreaUsed * e.goodParts, 0);
+    const overall = totalArea ? partArea / totalArea * 100 : NaN;
+    const rejects = sum('rejects'), good = sum('goodParts');
+    const k = [
+      ['Overall yield', `<span class="${yieldClass(overall)}">${fmt(overall)}%</span>`],
+      ['Entries', list.length],
+      ['Sheets used', sum('sheets').toLocaleString()],
+      ['Steel consumed', fmt(sheetKg, 0) + ' kg'],
+      ['In good parts', fmt(partKg, 0) + ' kg'],
+      ['Reusable offcut', fmt(offcut, 0) + ' kg'],
+      ['Scrap', fmt(scrapKg, 0) + ' kg'],
+      ['Reject rate', good + rejects ? fmt(rejects / (good + rejects) * 100) + '%' : '–'],
+    ];
+    $('kpis').innerHTML = k.map(([a, b]) => `<div class="kpi stat"><span class="k">${a}</span><span class="v">${b}</span></div>`).join('');
+  }
+
+  function renderChart(list) {
+    const data = [...list].sort((a, b) => a.date.localeCompare(b.date) || a.id - b.id).slice(-40);
+    if (!data.length) { $('chart').innerHTML = '<p class="empty">Chart appears once entries are added.</p>'; return; }
+    const W = 900, H = 240, pl = 36, pr = 10, pt = 10, pb = 28;
+    const iw = W - pl - pr, ih = H - pt - pb;
+    const bw = iw / data.length;
+    const y = v => pt + ih - (Math.max(0, Math.min(100, v)) / 100) * ih;
+    let svg = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Yield percentage per entry">`;
+    for (const t of [0, 25, 50, 75, 100]) {
+      svg += `<line x1="${pl}" x2="${W - pr}" y1="${y(t)}" y2="${y(t)}" stroke="var(--grid)"/>`;
+      svg += `<text x="${pl - 6}" y="${y(t) + 4}" text-anchor="end">${t}%</text>`;
+    }
+    data.forEach((e, i) => {
+      const x = pl + i * bw + bw * 0.15, w = bw * 0.7, v = Number.isFinite(e.yieldPct) ? e.yieldPct : 0;
+      svg += `<rect x="${x}" y="${y(v)}" width="${w}" height="${pt + ih - y(v)}" rx="2" fill="var(--bar)"><title>${esc(e.date)} ${esc(e.job)} ${esc(e.part)}: ${fmt(v)}%</title></rect>`;
+      if (Number.isFinite(e.nestPct)) svg += `<line x1="${x}" x2="${x + w}" y1="${y(e.nestPct)}" y2="${y(e.nestPct)}" stroke="var(--text)" stroke-width="2" stroke-dasharray="3 2"><title>Best-fit nest: ${fmt(e.nestPct)}%</title></line>`;
+      if (data.length <= 20 || i % Math.ceil(data.length / 12) === 0) svg += `<text x="${x + w / 2}" y="${H - 8}" text-anchor="middle">${esc(e.date.slice(5))}</text>`;
+    });
+    svg += '</svg>';
+    $('chart').innerHTML = svg + '<p class="note">Bars: actual yield. Dashed line: best-fit nest yield for that part on one sheet. Showing the latest 40 filtered entries.</p>';
+  }
+
+  function render() {
+    refreshFilterOptions();
+    const list = filtered();
+    renderTable(list);
+    renderKpis(list);
+    renderChart(list);
+  }
+
+  function resetForm() {
+    $('entryForm').reset();
+    $('editId').value = '';
+    $('date').value = new Date().toISOString().slice(0, 10);
+    $('density').value = DENSITY[$('grade').value];
+    $('formTitle').textContent = 'New entry';
+    $('submitBtn').textContent = 'Save entry';
+    $('cancelEdit').classList.add('hidden');
+    updatePreview();
+  }
+
+  // Events
+  $('grade').addEventListener('change', () => { $('density').value = DENSITY[$('grade').value]; updatePreview(); });
+  $('entryForm').addEventListener('input', updatePreview);
+  $('resetBtn').addEventListener('click', resetForm);
+  $('cancelEdit').addEventListener('click', resetForm);
+
+  $('entryForm').addEventListener('submit', ev => {
+    ev.preventDefault();
+    const e = readForm();
+    if (!(e.partArea > 0) && !(e.partL > 0 && e.partW > 0)) { alert('Enter part length and width, or a net area per part.'); return; }
+    const editId = $('editId').value;
+    if (editId) {
+      const i = entries.findIndex(x => String(x.id) === editId);
+      if (i >= 0) entries[i] = { ...e, id: entries[i].id };
+    } else {
+      entries.push({ ...e, id: Date.now() });
+    }
+    save();
+    resetForm();
+    render();
+  });
+
+  $('rows').addEventListener('click', ev => {
+    const edit = ev.target.dataset.edit, del = ev.target.dataset.del;
+    if (edit) {
+      const e = entries.find(x => String(x.id) === edit);
+      if (!e) return;
+      fillForm(e);
+      $('editId').value = e.id;
+      $('formTitle').textContent = 'Edit entry';
+      $('submitBtn').textContent = 'Update entry';
+      $('cancelEdit').classList.remove('hidden');
+      updatePreview();
+      $('formTitle').scrollIntoView({ behavior: 'smooth' });
+    } else if (del && confirm('Delete this entry?')) {
+      entries = entries.filter(x => String(x.id) !== del);
+      save();
+      render();
+    }
+  });
+
+  document.querySelectorAll('th[data-k]').forEach(th => th.addEventListener('click', () => {
+    sort = { k: th.dataset.k, dir: sort.k === th.dataset.k ? -sort.dir : -1 };
+    renderTable(filtered());
+  }));
+  ['fSearch', 'fGrade', 'fThick', 'fFrom', 'fTo'].forEach(id => $(id).addEventListener('input', render));
+
+  function download(name, text, type) {
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([text], { type }));
+    a.download = name;
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  }
+
+  $('exportCsv').addEventListener('click', () => {
+    const cols = ['date','job','part','operator','grade','finish','thickness','density','sheetL','sheetW','sheets','partL','partW','partAreaUsed','goodParts','rejects','offcut','kerf','sheetKg','partKg','scrapKg','yieldPct','effPct','perSheet','nestPct','notes'];
+    const cell = v => typeof v === 'number' ? (Number.isFinite(v) ? +v.toFixed(3) : '') : `"${String(v ?? '').replace(/"/g, '""')}"`;
+    const csv = [cols.join(','), ...filtered().map(e => cols.map(c => cell(e[c])).join(','))].join('\n');
+    download(`sheet-yield-${new Date().toISOString().slice(0, 10)}.csv`, csv, 'text/csv');
+  });
+  $('exportJson').addEventListener('click', () => download('sheet-yield-backup.json', JSON.stringify(entries, null, 2), 'application/json'));
+  $('importBtn').addEventListener('click', () => $('importFile').click());
+  $('importFile').addEventListener('change', async () => {
+    const f = $('importFile').files[0];
+    if (!f) return;
+    try {
+      const data = JSON.parse(await f.text());
+      if (!Array.isArray(data)) throw new Error('not a list');
+      const ids = new Set(entries.map(e => e.id));
+      const added = data.filter(e => e && e.id && !ids.has(e.id));
+      entries.push(...added);
+      save();
+      render();
+      alert(`Imported ${added.length} entr${added.length === 1 ? 'y' : 'ies'}.`);
+    } catch (err) {
+      alert('Could not read that file: ' + err.message);
+    }
+    $('importFile').value = '';
+  });
+  $('clearAll').addEventListener('click', () => {
+    if (entries.length && confirm('Delete ALL entries? Export a backup first if you need them.')) {
+      entries = [];
+      save();
+      render();
+    }
+  });
+
+  resetForm();
+  render();
+})();
+</script>
+</body>
+</html>
