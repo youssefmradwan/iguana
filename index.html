@@ -186,6 +186,12 @@
   .money-neg { color: var(--bad); }
   .money-pos { color: var(--good); }
   .layout-info { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; margin-top: 12px; }
+  .part-list { display: flex; flex-direction: column; gap: 10px; }
+  .part-row { border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px 12px; display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; align-items: end; }
+  .part-row .row-head { grid-column: 1 / -1; display: flex; justify-content: space-between; align-items: center; font-weight: 600; font-size: .9rem; min-height: 32px; }
+  .part-row .row-head button { min-height: 32px; }
+  .swatch { display: inline-block; width: 14px; height: 14px; border-radius: 3px; vertical-align: -2px; margin-right: 6px; }
+  .add-part { margin-top: 10px; }
 </style>
 </head>
 <body>
@@ -199,10 +205,10 @@
     <div class="grid">
       <label>Currency<input type="text" id="sCurrency" maxlength="4"></label>
       <label><span>Machine rate (<span class="cur"></span>/min)</span><input type="number" inputmode="decimal" id="sMachineRate" step="0.01" min="0"></label>
+      <label>Labour charged<select id="sLabourMode"><option value="min">Per minute</option><option value="part">Fixed fee per part</option></select></label>
       <label><span>Labour rate (<span class="cur"></span>/min)</span><input type="number" inputmode="decimal" id="sLabourRate" step="0.01" min="0"></label>
-      <label>Overhead (% of direct cost)<input type="number" inputmode="decimal" id="sOverheadPct" step="0.1" min="0"></label>
+      <label><span>Labour fee (<span class="cur"></span>/part)</span><input type="number" inputmode="decimal" id="sLabourFee" step="0.01" min="0"></label>
       <label>Target margin (% of price)<input type="number" inputmode="decimal" id="sMarginPct" step="0.1" min="0" max="95"></label>
-      <label>Offcut value (% of material price)<input type="number" inputmode="decimal" id="sOffcutPct" step="1" min="0" max="100"></label>
       <label>Good yield from (%)<input type="number" inputmode="decimal" id="sYieldGood" step="1" min="0" max="100"></label>
       <label>Warning yield from (%)<input type="number" inputmode="decimal" id="sYieldWarn" step="1" min="0" max="100"></label>
     </div>
@@ -227,42 +233,29 @@
         <div class="grid">
           <label>Date<input type="date" id="date" required></label>
           <label>Job / order no.<input type="text" id="job" placeholder="e.g. WO-1042"></label>
-          <label>Part name<input type="text" id="part" placeholder="e.g. Bracket A"></label>
-          <label>Operator<input type="text" id="operator"></label>
         </div>
       </fieldset>
 
       <fieldset>
         <legend>Sheet</legend>
         <div class="grid">
-          <label>Grade
-            <select id="grade" class="grade-select"></select>
-          </label>
+          <label>Grade<select id="grade" class="grade-select"></select></label>
           <label>Density (g/cm³)<input type="number" inputmode="decimal" id="density" step="0.01" min="0" required></label>
-          <label>Finish
-            <select id="finish" class="finish-select"></select>
-          </label>
+          <label>Finish<select id="finish" class="finish-select"></select></label>
           <label>Thickness (mm)<input type="number" inputmode="decimal" id="thickness" list="thicknessList" step="0.01" min="0" required></label>
           <label>Sheet size<select id="sheetPreset" class="sheet-select"></select></label>
           <label>Sheet length (mm)<input type="number" inputmode="decimal" id="sheetL" step="0.1" min="0" required value="2438"></label>
           <label>Sheet width (mm)<input type="number" inputmode="decimal" id="sheetW" step="0.1" min="0" required value="1219"></label>
           <label>Sheets used<span class="stepper"><button type="button" data-step="-1" data-for="sheets" aria-label="Decrease">−</button><input type="number" inputmode="numeric" pattern="[0-9]*" id="sheets" step="1" min="1" required value="1"><button type="button" data-step="1" data-for="sheets" aria-label="Increase">+</button></span></label>
+          <label>Kerf / gap (mm)<input type="number" inputmode="decimal" id="kerf" step="0.1" min="0" value="0"></label>
+          <label>Edge margin (mm)<input type="number" inputmode="decimal" id="margin" step="0.1" min="0" value="0"></label>
         </div>
       </fieldset>
 
       <fieldset>
-        <legend>Parts</legend>
-        <div class="grid">
-          <label>Part length (mm)<input type="number" inputmode="decimal" id="partL" step="0.1" min="0"></label>
-          <label>Part width (mm)<input type="number" inputmode="decimal" id="partW" step="0.1" min="0"></label>
-          <label>Net area / part (mm²)<input type="number" inputmode="decimal" id="partArea" step="1" min="0" placeholder="optional, for non-rectangular parts"></label>
-          <label>Good parts produced<span class="stepper"><button type="button" data-step="-1" data-for="goodParts" aria-label="Decrease">−</button><input type="number" inputmode="numeric" pattern="[0-9]*" id="goodParts" step="1" min="0" required><button type="button" data-step="1" data-for="goodParts" aria-label="Increase">+</button></span></label>
-          <label>Rejected parts<span class="stepper"><button type="button" data-step="-1" data-for="rejects" aria-label="Decrease">−</button><input type="number" inputmode="numeric" pattern="[0-9]*" id="rejects" step="1" min="0" value="0"><button type="button" data-step="1" data-for="rejects" aria-label="Increase">+</button></span></label>
-          <label>Reusable offcut (kg)<input type="number" inputmode="decimal" id="offcut" step="0.01" min="0" value="0"></label>
-          <label>Kerf / gap (mm)<input type="number" inputmode="decimal" id="kerf" step="0.1" min="0" value="0"></label>
-          <label>Edge margin (mm)<input type="number" inputmode="decimal" id="margin" step="0.1" min="0" value="0"></label>
-        </div>
-        <label style="margin-top:12px">Notes<textarea id="notes" rows="2"></textarea></label>
+        <legend>Parts on this sheet</legend>
+        <div class="part-list" id="partRows"></div>
+        <button type="button" class="add-part" id="addPart">+ Add another part</button>
       </fieldset>
 
       <fieldset>
@@ -270,22 +263,30 @@
         <div class="grid">
           <label><span>Material price (<span class="cur"></span>/kg)</span><input type="number" inputmode="decimal" id="matPrice" step="0.01" min="0"></label>
           <label>Machine time (min)<input type="number" inputmode="decimal" id="machineMin" step="0.1" min="0" value="0"></label>
-          <label>Labour time (min)<input type="number" inputmode="decimal" id="labourMin" step="0.1" min="0" value="0"></label>
+          <label>Labour charged<select id="labourMode"><option value="min">Per minute</option><option value="part">Fixed fee per part</option></select></label>
+          <label id="labourMinWrap">Labour time (min)<input type="number" inputmode="decimal" id="labourMin" step="0.1" min="0" value="0"></label>
+          <label id="labourFeeWrap"><span>Labour fee (<span class="cur"></span>/part)</span><input type="number" inputmode="decimal" id="labourPerPart" step="0.01" min="0"></label>
           <label><span>Other costs (<span class="cur"></span>)</span><input type="number" inputmode="decimal" id="otherCost" step="0.01" min="0" value="0" placeholder="gas, consumables, delivery"></label>
-          <label><span>Selling price / part (<span class="cur"></span>)</span><input type="number" inputmode="decimal" id="sellPrice" step="0.01" min="0" placeholder="optional"></label>
         </div>
-        <p class="note">Material price fills in from Prices &amp; rates for the grade and finish. Change them here if this sheet cost something different.</p>
+        <p class="note">Material price fills in from Prices &amp; rates for the grade and finish. A per-part labour fee is charged on every part cut, good or rejected.</p>
+        <label style="margin-top:12px">Notes<textarea id="notes" rows="2"></textarea></label>
       </fieldset>
 
       <div class="preview" id="preview"></div>
       <div class="preview" id="costPreview"></div>
+      <div class="table-wrap" id="partCostWrap" hidden>
+        <table>
+          <thead><tr><th class="l">Part</th><th>Good</th><th>Cost / part</th><th>Price at margin</th><th>Selling price</th><th>Margin</th></tr></thead>
+          <tbody id="partCostRows"></tbody>
+        </table>
+      </div>
 
-      <div class="actions">
+      <div class="actions" style="margin-top:14px">
         <button type="submit" class="primary" id="submitBtn">Save entry</button>
         <button type="button" id="cancelEdit" class="hidden">Cancel edit</button>
         <button type="button" id="resetBtn">Clear</button>
       </div>
-      <p class="note">Yield = net area of good parts ÷ total sheet area. If "Net area / part" is blank, part length × width is used. Best-fit nest shows how many rectangular parts fit on one sheet, mixing orientations to fill leftover strips; see the layout below.</p>
+      <p class="note">Yield = net area of good parts ÷ total sheet area. If a part's net area is blank, length × width is used. Best nest is the yield you'd get cutting all parts on the fewest sheets the layout needs. With several parts, costs are shared by part area; machine time is shared the same way.</p>
     </form>
   </section>
 
@@ -301,12 +302,7 @@
       </div>
     </div>
     <div id="layout"></div>
-    <div class="legend">
-      <span><i style="background:var(--part)"></i>Good part</span>
-      <span><i style="background:var(--reject)"></i>Rejected part</span>
-      <span><i style="border:1px dashed var(--muted)"></i>Unused slot</span>
-      <span><i style="background:var(--sheet);border:1px solid var(--border)"></i>Offcut / scrap</span>
-    </div>
+    <div class="legend" id="legend"></div>
     <div class="layout-info" id="layoutInfo"></div>
     <p class="slot-info" id="slotInfo">Tap a part on the sheet to see its size and position.</p>
     <p class="note" id="layoutNote"></p>
@@ -320,17 +316,17 @@
       <label>Grade<select id="qGrade" class="grade-select"></select></label>
       <label>Finish<select id="qFinish" class="finish-select"></select></label>
       <label>Thickness (mm)<input type="number" inputmode="decimal" id="qThick" list="thicknessList" step="0.01" min="0" value="1.5"></label>
-      <label>Part length (mm)<input type="number" inputmode="decimal" id="qL" step="0.1" min="0" value="500"></label>
-      <label>Part width (mm)<input type="number" inputmode="decimal" id="qW" step="0.1" min="0" value="300"></label>
-      <label>Net area / part (mm²)<input type="number" inputmode="decimal" id="qArea" step="1" min="0" placeholder="optional"></label>
-      <label>Quantity<span class="stepper"><button type="button" data-step="-1" data-for="qQty" aria-label="Decrease">−</button><input type="number" inputmode="numeric" pattern="[0-9]*" id="qQty" step="1" min="1" value="100"><button type="button" data-step="1" data-for="qQty" aria-label="Increase">+</button></span></label>
-      <label>Machine time / part (min)<input type="number" inputmode="decimal" id="qMachPart" step="0.01" min="0" value="0.5"></label>
       <label>Kerf / gap (mm)<input type="number" inputmode="decimal" id="qKerf" step="0.1" min="0" value="3"></label>
       <label>Edge margin (mm)<input type="number" inputmode="decimal" id="qMargin" step="0.1" min="0" value="10"></label>
-      <label>Setup time (min)<input type="number" inputmode="decimal" id="qSetup" step="1" min="0" value="20"></label>
+      <label>Labour charged<select id="qLabourMode"><option value="min">Per minute</option><option value="part">Fixed fee per part</option></select></label>
+      <label id="qSetupWrap">Setup time (min)<input type="number" inputmode="decimal" id="qSetup" step="1" min="0" value="20"></label>
       <label><span>Other costs (<span class="cur"></span>)</span><input type="number" inputmode="decimal" id="qOther" step="0.01" min="0" value="0"></label>
       <label>Custom sheet L × W (mm)<span style="display:flex;gap:6px"><input type="number" inputmode="decimal" id="qCustL" step="1" min="0" placeholder="L"><input type="number" inputmode="decimal" id="qCustW" step="1" min="0" placeholder="W"></span></label>
     </div>
+    <div class="subhead">Parts</div>
+    <div class="part-list" id="qPartRows"></div>
+    <button type="button" class="add-part" id="addQPart">+ Add another part</button>
+
     <div class="subhead">Sheet options <span class="muted" style="text-transform:none;letter-spacing:0;font-weight:400">(tap a row to choose)</span></div>
     <div class="table-wrap">
       <table>
@@ -340,6 +336,12 @@
     </div>
     <div class="subhead">Quote for chosen sheet</div>
     <div class="kpis" id="quoteKpis"></div>
+    <div class="table-wrap" style="margin-top:12px">
+      <table>
+        <thead><tr><th class="l">Part</th><th>Qty</th><th>Machine min</th><th>Cost / part</th><th>Price / part</th><th>Line total</th></tr></thead>
+        <tbody id="quoteParts"></tbody>
+      </table>
+    </div>
     <div class="actions" style="margin-top:14px">
       <button type="button" class="primary" id="quoteToForm">Use in entry form</button>
       <button type="button" id="quoteCopy">Copy quote text</button>
@@ -370,7 +372,7 @@
   <section>
     <h2>Entries</h2>
     <div class="filters">
-      <label>Search<input type="search" id="fSearch" placeholder="job, part, operator, notes"></label>
+      <label>Search<input type="search" id="fSearch" placeholder="job, part, notes"></label>
       <label>Grade<select id="fGrade"><option value="">All</option></select></label>
       <label>Thickness<select id="fThick"><option value="">All</option></select></label>
       <label>From<input type="date" id="fFrom"></label>
@@ -382,16 +384,16 @@
           <tr>
             <th data-k="date">Date</th>
             <th data-k="job" class="l">Job</th>
-            <th data-k="part" class="l">Part</th>
+            <th data-k="partNames" class="l">Parts</th>
             <th data-k="grade" class="l">Grade</th>
             <th data-k="thickness">t (mm)</th>
             <th data-k="sheets">Sheets</th>
             <th data-k="sheetKg">Sheet kg</th>
-            <th data-k="goodParts">Parts</th>
+            <th data-k="good">Good</th>
             <th data-k="partKg">Parts kg</th>
             <th data-k="scrapKg">Scrap kg</th>
             <th data-k="yieldPct">Yield</th>
-            <th data-k="nestPct">Nest max</th>
+            <th data-k="bestPct">Best nest</th>
             <th data-k="totalCost">Total cost</th>
             <th data-k="costPerPart">Cost / part</th>
             <th data-k="scrapLoss">Scrap lost</th>
@@ -433,9 +435,11 @@
   const GRADES = [['304', '304 / 304L'], ['316', '316 / 316L'], ['430', '430'], ['201', '201'], ['409', '409'], ['2205', '2205 Duplex'], ['other', 'Other']];
   const FINISHES = ['2B', 'BA', 'No.4 / Brushed', 'No.1 / HRAP', 'Mirror / No.8', 'Other'];
   const SHEET_SIZES = [[2000, 1000, ''], [2438, 1219, '8 × 4 ft'], [2500, 1250, ''], [3000, 1500, ''], [3048, 1524, '10 × 5 ft'], [4000, 2000, '']];
+  const PART_COLORS = ['#2f6fb0', '#2e8b57', '#c07a00', '#7b4fb3', '#0f8a8a', '#b5487a', '#5a7d1a', '#8a5a2b'];
+  const MIXED_LIMIT = 800; // above this many mixed parts, skip nesting (too slow to run live)
   // Example values only; users replace them with their own supplier prices and shop rates.
   const DEFAULT_SETTINGS = {
-    currency: 'EGP', machineRateMin: 25, labourRateMin: 2.5, overheadPct: 15, marginPct: 25, offcutPct: 70,
+    currency: 'EGP', machineRateMin: 25, labourMode: 'min', labourRateMin: 2.5, labourPerPart: 5, marginPct: 25,
     yieldGood: 80, yieldWarn: 65,
     grades: {
       '304': { density: 7.93, price: 160 },
@@ -453,8 +457,13 @@
     const s = clone(DEFAULT_SETTINGS);
     if (!saved || typeof saved !== 'object') return s;
     for (const k of Object.keys(s)) if (k !== 'grades' && k !== 'finishes' && saved[k] !== undefined) s[k] = saved[k];
-    for (const g of Object.keys(s.grades)) Object.assign(s.grades[g], saved.grades?.[g] || {});
+    for (const g of Object.keys(s.grades)) {
+      const sg = saved.grades?.[g] || {};
+      if (Number.isFinite(sg.density)) s.grades[g].density = sg.density;
+      if (Number.isFinite(sg.price)) s.grades[g].price = sg.price;
+    }
     for (const f of Object.keys(s.finishes)) if (Number.isFinite(saved.finishes?.[f])) s.finishes[f] = saved.finishes[f];
+    if (s.labourMode !== 'part') s.labourMode = 'min';
     return s;
   }
   function loadSettings() {
@@ -476,6 +485,10 @@
   };
   const num = id => parseFloat($(id).value);
   const fin = (x, dflt = 0) => Number.isFinite(x) ? x : dflt;
+  const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const letter = i => String.fromCharCode(65 + (i % 26));
+  const partColor = i => PART_COLORS[i % PART_COLORS.length];
+  const today = () => new Date().toISOString().slice(0, 10);
 
   let toastTimer;
   function notify(msg, isErr) {
@@ -512,7 +525,15 @@
     try { localStorage.setItem(STORE_KEY, JSON.stringify(entries)); } catch { notify('Could not save in this browser. Export a backup to keep your data.', true); }
   }
 
-  // Guillotine nest of identical rectangles: place a grid, then recursively fill the
+  // Entries saved before multi-part support stored a single part in flat fields.
+  function entryParts(e) {
+    if (Array.isArray(e.parts) && e.parts.length) return e.parts;
+    return [{ name: e.part || '', L: e.partL || 0, W: e.partW || 0, area: e.partArea || 0, good: e.goodParts || 0, rejects: e.rejects || 0, sell: 0 }];
+  }
+  const partArea = p => p.area > 0 ? p.area : p.L * p.W;
+
+  // ---------- Nesting ----------
+  // One part type: guillotine nest of identical rectangles. Place a grid, then recursively fill the
   // leftover right and bottom strips, trying both part orientations and both split directions.
   function nestPlan(SL, SW, pL, pW, kerf, margin) {
     const W = SL - 2 * margin, H = SW - 2 * margin, k = kerf;
@@ -551,66 +572,214 @@
     return { n: root.n, rects };
   }
 
+  // Several part types: MaxRects bin packing (free space kept as maximal rectangles) with rotation,
+  // over as many sheets as needed. Tries a few orderings and fit rules and keeps the fewest sheets.
+  function mixedNest(SL, SW, items, k, m) {
+    const W0 = SL - 2 * m + k, H0 = SW - 2 * m + k; // each part reserves its kerf on the far side
+    if (W0 <= 0 || H0 <= 0) return null;
+    const E = 1e-6;
+    function place(s, p) {
+      const next = [];
+      for (const f of s.free) {
+        if (p.x >= f.x + f.w - E || p.x + p.w <= f.x + E || p.y >= f.y + f.h - E || p.y + p.h <= f.y + E) { next.push(f); continue; }
+        if (p.x > f.x + E) next.push({ x: f.x, y: f.y, w: p.x - f.x, h: f.h });
+        if (p.x + p.w < f.x + f.w - E) next.push({ x: p.x + p.w, y: f.y, w: f.x + f.w - p.x - p.w, h: f.h });
+        if (p.y > f.y + E) next.push({ x: f.x, y: f.y, w: f.w, h: p.y - f.y });
+        if (p.y + p.h < f.y + f.h - E) next.push({ x: f.x, y: p.y + p.h, w: f.w, h: f.y + f.h - p.y - p.h });
+      }
+      // Drop free rectangles contained in another one.
+      s.free = next.filter((a, i) => !next.some((b, j) => j !== i &&
+        a.x >= b.x - E && a.y >= b.y - E && a.x + a.w <= b.x + b.w + E && a.y + a.h <= b.y + b.h + E &&
+        (a.w !== b.w || a.h !== b.h || a.x !== b.x || a.y !== b.y || j < i)));
+    }
+    function run(order, rule) {
+      const sheets = [];
+      for (const it of order) {
+        const a = it.w + k, b = it.h + k;
+        let best = null;
+        const scan = s => {
+          for (const f of s.free) for (const [ww, hh] of [[a, b], [b, a]]) {
+            if (ww > f.w + E || hh > f.h + E) continue;
+            const dw = f.w - ww, dh = f.h - hh;
+            const s1 = rule === 'area' ? f.w * f.h - ww * hh : Math.min(dw, dh);
+            const s2 = rule === 'area' ? Math.min(dw, dh) : Math.max(dw, dh);
+            if (!best || s1 < best.s1 - E || (Math.abs(s1 - best.s1) <= E && s2 < best.s2)) best = { s, x: f.x, y: f.y, ww, hh, s1, s2 };
+          }
+        };
+        for (const s of sheets) { scan(s); if (best) break; }
+        if (!best) {
+          const s = { free: [{ x: m, y: m, w: W0, h: H0 }], rects: [] };
+          sheets.push(s);
+          scan(s);
+          if (!best) return null; // part larger than the usable sheet
+        }
+        best.s.rects.push({ x: best.x, y: best.y, w: best.ww - k, h: best.hh - k, type: it.type, status: it.status });
+        place(best.s, { x: best.x, y: best.y, w: best.ww, h: best.hh });
+      }
+      return sheets.map(s => s.rects);
+    }
+    const orders = [
+      (p, q) => q.w * q.h - p.w * p.h,
+      (p, q) => Math.max(q.w, q.h) - Math.max(p.w, p.h),
+      (p, q) => (q.w + q.h) - (p.w + p.h),
+    ];
+    let best = null;
+    for (const rule of ['short', 'area']) for (const cmp of orders) {
+      const res = run([...items].sort(cmp), rule);
+      if (!res) return null;
+      if (!best || res.length < best.length) best = res;
+    }
+    return best;
+  }
+
+  const nestCache = new Map();
+  // parts: [{L, W, good, rejects}]. Returns { fits, mode, need, ... } or null when inputs are incomplete.
+  function nestLayout(SL, SW, kerf, margin, parts) {
+    const key = JSON.stringify([SL, SW, kerf, margin, parts.map(p => [p.L, p.W, p.good || 0, p.rejects || 0])]);
+    if (nestCache.has(key)) return nestCache.get(key);
+    let res = null;
+    if (SL > 0 && SW > 0 && parts.length && parts.every(p => p.L > 0 && p.W > 0)) {
+      const total = parts.reduce((s, p) => s + (p.good || 0) + (p.rejects || 0), 0);
+      if (parts.length === 1) {
+        const plan = nestPlan(SL, SW, parts[0].L, parts[0].W, kerf, margin);
+        res = plan && plan.n > 0 ? { fits: true, mode: 'grid', plan, cap: plan.n, need: Math.ceil(total / plan.n) } : { fits: false };
+      } else if (total > MIXED_LIMIT) {
+        res = { fits: true, mode: 'mixed', tooMany: true, need: NaN };
+      } else {
+        const items = [];
+        parts.forEach((p, t) => {
+          const g = p.good || 0, n = g + (p.rejects || 0);
+          for (let i = 0; i < n; i++) items.push({ w: p.L, h: p.W, type: t, status: i < g ? 'good' : 'rej' });
+        });
+        const sheets = mixedNest(SL, SW, items, kerf, margin);
+        res = sheets ? { fits: true, mode: 'mixed', sheets, need: sheets.length } : { fits: false };
+      }
+    }
+    if (nestCache.size > 400) nestCache.clear();
+    nestCache.set(key, res);
+    return res;
+  }
+
+  // ---------- Calculations ----------
   function compute(e) {
+    const parts = entryParts(e);
+    const sheets = e.sheets || 0;
     const sheetArea = e.sheetL * e.sheetW;                // mm² per sheet
-    const totalArea = sheetArea * e.sheets;
-    const partArea = e.partArea > 0 ? e.partArea : e.partL * e.partW;
+    const totalArea = sheetArea * sheets;
     const kgPerMm2 = e.thickness * e.density / 1e6;      // mm × g/cm³ → kg/mm²
+    const good = parts.reduce((s, p) => s + (p.good || 0), 0);
+    const rejects = parts.reduce((s, p) => s + (p.rejects || 0), 0);
+    const goodArea = parts.reduce((s, p) => s + partArea(p) * (p.good || 0), 0);
+    const rejArea = parts.reduce((s, p) => s + partArea(p) * (p.rejects || 0), 0);
     const sheetKg = totalArea * kgPerMm2;
-    const partKg = partArea * e.goodParts * kgPerMm2;
-    const rejectKg = partArea * (e.rejects || 0) * kgPerMm2;
-    const offcut = e.offcut || 0;
-    const scrapKg = Math.max(0, sheetKg - partKg - offcut);
-    const yieldPct = totalArea > 0 ? (partArea * e.goodParts) / totalArea * 100 : NaN;
-    const effPct = sheetKg > 0 ? (partKg + offcut) / sheetKg * 100 : NaN;
-    const plan = nestPlan(e.sheetL, e.sheetW, e.partL, e.partW, e.kerf || 0, e.margin || 0);
-    const perSheet = plan ? plan.n : NaN;
-    const nestPct = perSheet > 0 ? perSheet * partArea / sheetArea * 100 : NaN;
+    const partKg = goodArea * kgPerMm2;
+    const rejectKg = rejArea * kgPerMm2;
+    const scrapKg = Math.max(0, sheetKg - partKg);
+    const yieldPct = totalArea > 0 ? goodArea / totalArea * 100 : NaN;
+    const nest = nestLayout(e.sheetL, e.sheetW, e.kerf || 0, e.margin || 0, parts);
+    const minSheets = nest && nest.fits && Number.isFinite(nest.need) ? nest.need : NaN;
+    const perSheet = nest && nest.mode === 'grid' ? nest.cap : NaN;
+    const bestPct = minSheets > 0 ? goodArea / (minSheets * sheetArea) * 100 : NaN;
 
     // Costs. Entries carry the prices and rates they were saved with; older entries fall back to current settings.
     const matPrice = fin(e.matPrice, autoMatPrice(e.grade, e.finish));
     // Rates are per minute. Entries saved before the switch stored hourly rates (machineRate/labourRate).
     const machineRateMin = fin(e.machineRateMin, Number.isFinite(e.machineRate) ? e.machineRate / 60 : settings.machineRateMin);
     const labourRateMin = fin(e.labourRateMin, Number.isFinite(e.labourRate) ? e.labourRate / 60 : settings.labourRateMin);
-    const overheadPct = fin(e.overheadPct, settings.overheadPct), offcutPct = fin(e.offcutPct, settings.offcutPct);
+    const labourMode = e.labourMode === 'part' ? 'part' : 'min';
+    const labourPerPart = fin(e.labourPerPart, settings.labourPerPart);
     const marginPct = fin(e.marginPct, settings.marginPct);
-    const good = e.goodParts || 0;
     const materialCost = sheetKg * matPrice;
-    const offcutCredit = offcut * matPrice * offcutPct / 100;
-    const netMaterial = materialCost - offcutCredit;
     const machineCost = fin(e.machineMin) * machineRateMin;
-    const labourCost = fin(e.labourMin) * labourRateMin;
+    const labourCost = labourMode === 'part' ? labourPerPart * (good + rejects) : fin(e.labourMin) * labourRateMin;
     const otherCost = fin(e.otherCost);
-    const directCost = netMaterial + machineCost + labourCost + otherCost;
-    const overheadCost = directCost * overheadPct / 100;
-    const totalCost = directCost + overheadCost;
+    const totalCost = materialCost + machineCost + labourCost + otherCost;
     const costPerPart = good > 0 ? totalCost / good : NaN;
-    const matPerPart = good > 0 ? netMaterial / good : NaN;
-    const scrapLoss = scrapKg * matPrice;
-    const rejectLoss = rejectKg * matPrice;
     const quotePerPart = marginPct < 100 ? costPerPart / (1 - marginPct / 100) : NaN;
-    const revenue = e.sellPrice > 0 ? e.sellPrice * good : NaN;
+    const sold = parts.filter(p => (p.good || 0) > 0);
+    const revenue = sold.length && sold.every(p => p.sell > 0) ? sold.reduce((s, p) => s + p.sell * p.good, 0) : NaN;
     const profit = revenue - totalCost;
     const marginAct = revenue > 0 ? profit / revenue * 100 : NaN;
-    // What the job would have saved if every part had been cut from the best-fit nest.
-    const minSheets = perSheet > 0 ? Math.ceil((good + (e.rejects || 0)) / perSheet) : NaN;
-    const extraSheets = Number.isFinite(minSheets) ? Math.max(0, e.sheets - minSheets) : 0;
-    const potentialSaving = e.sheets > 0 ? extraSheets * (sheetKg / e.sheets) * matPrice : 0;
-    return { ...e, partAreaUsed: partArea, sheetKg, partKg, rejectKg, scrapKg, yieldPct, effPct, plan, perSheet, nestPct,
-      matPrice, machineRateMin, labourRateMin, overheadPct, offcutPct, marginPct,
-      materialCost, offcutCredit, netMaterial, machineCost, labourCost, otherCost, directCost, overheadCost,
-      totalCost, costPerPart, matPerPart, scrapLoss, rejectLoss, quotePerPart, revenue, profit, marginAct,
-      minSheets, extraSheets, potentialSaving };
+    const scrapLoss = scrapKg * matPrice;
+    const extraSheets = Number.isFinite(minSheets) ? Math.max(0, sheets - minSheets) : 0;
+    const potentialSaving = sheets > 0 ? extraSheets * (sheetKg / sheets) * matPrice : 0;
+
+    // Per part: material, machine and other costs shared by area cut (good + rejected); labour by fee or by area.
+    const cutArea = goodArea + rejArea;
+    const partCosts = parts.map((p, i) => {
+      const n = (p.good || 0) + (p.rejects || 0);
+      const share = cutArea > 0 ? partArea(p) * n / cutArea : 0;
+      const alloc = (materialCost + machineCost + otherCost) * share + (labourMode === 'part' ? labourPerPart * n : labourCost * share);
+      const unit = p.good > 0 ? alloc / p.good : NaN;
+      const price = marginPct < 100 ? unit / (1 - marginPct / 100) : NaN;
+      return { i, name: p.name, good: p.good || 0, unit, price, sell: p.sell || 0, margin: p.sell > 0 ? (p.sell - unit) / p.sell * 100 : NaN };
+    });
+
+    return { ...e, parts, good, rejects, goodArea, partNames: parts.map(p => p.name).filter(Boolean).join(', '),
+      partsText: parts.map(p => `${p.name || 'part'} ${p.L}×${p.W} ${p.good || 0}${p.rejects ? '+' + p.rejects + 'rej' : ''}`).join('; '),
+      sheetKg, partKg, rejectKg, scrapKg, yieldPct, nest, minSheets, perSheet, bestPct,
+      matPrice, machineRateMin, labourRateMin, labourMode, labourPerPart, marginPct,
+      materialCost, machineCost, labourCost, otherCost, totalCost, costPerPart, quotePerPart,
+      revenue, profit, marginAct, scrapLoss, extraSheets, potentialSaving, partCosts };
   }
 
   function yieldClass(p) { return !Number.isFinite(p) ? '' : p >= settings.yieldGood ? 'good' : p >= settings.yieldWarn ? 'warn' : 'bad'; }
+
+  // ---------- Part rows (entry form and quote) ----------
+  let rowSeq = 0;
+  function partRowHTML(kind, p, idx) {
+    const u = `${kind}${++rowSeq}`;
+    const stepper = (f, label, val, min) => `<label>${label}<span class="stepper"><button type="button" data-step="-1" data-for="${u}-${f}" aria-label="Decrease">−</button><input type="number" inputmode="numeric" pattern="[0-9]*" id="${u}-${f}" data-f="${f}" step="1" min="${min}" value="${val}"><button type="button" data-step="1" data-for="${u}-${f}" aria-label="Increase">+</button></span></label>`;
+    const field = (f, label, val, step, ph = '') => `<label>${label}<input type="number" inputmode="decimal" id="${u}-${f}" data-f="${f}" step="${step}" min="0" value="${val ?? ''}" placeholder="${ph}"></label>`;
+    const extra = kind === 'e'
+      ? stepper('good', 'Good parts', p.good ?? '', 0) + stepper('rejects', 'Rejected', p.rejects ?? 0, 0)
+        + field('sell', `<span>Selling price / part (<span class="cur">${esc(settings.currency)}</span>)</span>`, p.sell || '', '0.01', 'optional')
+      : stepper('qty', 'Quantity', p.qty ?? 1, 1) + field('mach', 'Machine time / part (min)', p.mach ?? 0.5, '0.01');
+    return `<div class="part-row" data-u="${u}">
+      <div class="row-head"><span><i class="swatch" style="background:${partColor(idx)}"></i><span class="row-title">Part ${letter(idx)}</span></span><button type="button" class="link danger" data-remove-part>Remove</button></div>
+      <label>Part name<input type="text" id="${u}-name" data-f="name" value="${esc(p.name || '')}" placeholder="e.g. Bracket A"></label>
+      ${field('L', 'Length (mm)', p.L || '', '0.1')}
+      ${field('W', 'Width (mm)', p.W || '', '0.1')}
+      ${field('area', 'Net area (mm²)', p.area || '', '1', 'optional')}
+      ${extra}
+    </div>`;
+  }
+  function renumberRows(container) {
+    const rows = [...container.querySelectorAll('.part-row')];
+    rows.forEach((row, i) => {
+      row.querySelector('.row-title').textContent = `Part ${letter(i)}`;
+      row.querySelector('.swatch').style.background = partColor(i);
+      row.querySelector('[data-remove-part]').hidden = rows.length === 1;
+    });
+  }
+  function setPartRows(id, kind, parts) {
+    $(id).innerHTML = parts.map((p, i) => partRowHTML(kind, p, i)).join('');
+    renumberRows($(id));
+  }
+  function addPartRow(id, kind) {
+    const c = $(id), n = c.querySelectorAll('.part-row').length;
+    c.insertAdjacentHTML('beforeend', partRowHTML(kind, kind === 'e' ? { good: '', rejects: 0 } : { qty: 1, mach: 0.5 }, n));
+    renumberRows(c);
+    c.lastElementChild.querySelector('[data-f="name"]').focus();
+  }
+  function readPartRows(id, kind) {
+    return [...$(id).querySelectorAll('.part-row')].map(row => {
+      const el = f => row.querySelector(`[data-f="${f}"]`);
+      const n = f => parseFloat(el(f).value);
+      const base = { name: el('name').value.trim(), L: n('L') || 0, W: n('W') || 0, area: n('area') || 0 };
+      return kind === 'e'
+        ? { ...base, good: Math.max(0, Math.floor(n('good') || 0)), rejects: Math.max(0, Math.floor(n('rejects') || 0)), sell: n('sell') || 0 }
+        : { ...base, qty: Math.max(0, Math.floor(n('qty') || 0)), mach: n('mach') || 0 };
+    });
+  }
+
+  // ---------- Entry form ----------
+  let editRates = null;
 
   function readForm() {
     return {
       date: $('date').value,
       job: $('job').value.trim(),
-      part: $('part').value.trim(),
-      operator: $('operator').value.trim(),
       grade: $('grade').value,
       density: num('density'),
       finish: $('finish').value,
@@ -618,79 +787,101 @@
       sheetL: num('sheetL'),
       sheetW: num('sheetW'),
       sheets: num('sheets'),
-      partL: num('partL') || 0,
-      partW: num('partW') || 0,
-      partArea: num('partArea') || 0,
-      goodParts: num('goodParts'),
-      rejects: num('rejects') || 0,
-      offcut: num('offcut') || 0,
       kerf: num('kerf') || 0,
       margin: num('margin') || 0,
+      parts: readPartRows('partRows', 'e'),
       notes: $('notes').value.trim(),
       matPrice: num('matPrice'),
       machineMin: num('machineMin') || 0,
+      labourMode: $('labourMode').value,
       labourMin: num('labourMin') || 0,
+      labourPerPart: num('labourPerPart') || 0,
       otherCost: num('otherCost') || 0,
-      sellPrice: num('sellPrice') || 0,
       // Rates are snapshotted so later changes to Prices & rates don't rewrite past jobs.
-      ...(editRates || {
-        machineRateMin: settings.machineRateMin, labourRateMin: settings.labourRateMin,
-        overheadPct: settings.overheadPct, offcutPct: settings.offcutPct, marginPct: settings.marginPct,
-      }),
+      ...(editRates || { machineRateMin: settings.machineRateMin, labourRateMin: settings.labourRateMin, marginPct: settings.marginPct }),
     };
   }
-  let editRates = null;
 
   function applyAutoPrices() {
     const g = $('grade').value, f = $('finish').value;
     $('density').value = gradeInfo(g).density;
     $('matPrice').value = +autoMatPrice(g, f).toFixed(2);
   }
+  function applyLabourDefaults() {
+    $('labourMode').value = settings.labourMode;
+    $('labourPerPart').value = settings.labourPerPart;
+    syncLabourUI();
+  }
+  function syncLabourUI() {
+    const perPart = $('labourMode').value === 'part';
+    $('labourMinWrap').hidden = perPart;
+    $('labourFeeWrap').hidden = !perPart;
+    $('qSetupWrap').hidden = $('qLabourMode').value === 'part';
+  }
 
   function fillForm(e) {
-    for (const k of ['date','job','part','operator','grade','density','finish','thickness','sheetL','sheetW','sheets','goodParts','rejects','offcut','kerf','margin','notes']) $(k).value = e[k] ?? '';
-    $('partL').value = e.partL || '';
-    $('partW').value = e.partW || '';
-    $('partArea').value = e.partArea || '';
     const c = compute(e);
+    for (const k of ['date', 'job', 'grade', 'density', 'finish', 'thickness', 'sheetL', 'sheetW', 'sheets', 'kerf', 'margin', 'notes']) $(k).value = e[k] ?? '';
+    setPartRows('partRows', 'e', c.parts.map(p => ({ ...p })));
     $('matPrice').value = +c.matPrice.toFixed(4);
-    for (const k of ['machineMin', 'labourMin', 'otherCost']) $(k).value = e[k] || 0;
-    $('sellPrice').value = e.sellPrice || '';
+    $('machineMin').value = e.machineMin || 0;
+    $('labourMode').value = c.labourMode;
+    $('labourMin').value = e.labourMin || 0;
+    $('labourPerPart').value = +c.labourPerPart.toFixed(4);
+    $('otherCost').value = e.otherCost || 0;
     syncSheetPreset();
+    syncLabourUI();
   }
+
+  const statHTML = ([k, v]) => `<div class="stat"><span class="k">${k}</span><span class="v">${v}</span></div>`;
 
   function updatePreview() {
     const e = readForm();
     const c = compute(e);
-    const partOk = c.partAreaUsed > 0 && e.goodParts >= 0;
-    const stats = [
+    const partOk = c.goodArea > 0;
+    const nestText = !c.nest ? '–' : !c.nest.fits ? '<span class="bad">part too big</span>' : c.nest.tooMany ? 'too many to nest'
+      : `${c.minSheets} sheet${c.minSheets === 1 ? '' : 's'}${Number.isFinite(c.perSheet) ? ` (${c.perSheet}/sheet)` : ''}, ${fmt(c.bestPct)}%`;
+    $('preview').innerHTML = [
       ['Sheet weight', Number.isFinite(c.sheetKg) ? fmt(c.sheetKg, 2) + ' kg' : '–'],
       ['Parts weight', partOk ? fmt(c.partKg, 2) + ' kg' : '–'],
       ['Scrap', partOk ? fmt(c.scrapKg, 2) + ' kg' : '–'],
       ['Yield', partOk ? `<span class="${yieldClass(c.yieldPct)}">${fmt(c.yieldPct)}%</span>` : '–'],
-      ['Incl. offcut', partOk ? fmt(c.effPct) + '%' : '–'],
-      ['Best-fit nest', Number.isFinite(c.perSheet) ? `${c.perSheet} / sheet (${fmt(c.nestPct)}%)` : '–'],
-    ];
-    $('preview').innerHTML = stats.map(([k, v]) => `<div class="stat"><span class="k">${k}</span><span class="v">${v}</span></div>`).join('');
+      ['Best nest', nestText],
+    ].map(statHTML).join('');
     const costOk = partOk && Number.isFinite(c.totalCost);
     const cs = [
-      ['Material bought', money(c.materialCost)],
-      ['Offcut credit', money(c.offcutCredit)],
-      ['Net material', money(c.netMaterial)],
-      ['Machine + labour', money(c.machineCost + c.labourCost)],
-      ['Overhead', money(c.overheadCost)],
+      ['Material', money(c.materialCost)],
+      ['Machine', money(c.machineCost)],
+      [c.labourMode === 'part' ? `Labour (${c.good + c.rejects} × ${money(c.labourPerPart)})` : 'Labour', money(c.labourCost)],
       ['Total job cost', `<strong>${money(c.totalCost)}</strong>`],
       ['Cost / good part', costOk ? money(c.costPerPart) : '–'],
       [`Price / part at ${fmt(c.marginPct, 0)}% margin`, costOk ? money(c.quotePerPart) : '–'],
       ['Value lost to scrap', money(c.scrapLoss)],
     ];
     if (c.revenue > 0) cs.push(['Profit', `<span class="${c.profit >= 0 ? 'money-pos' : 'money-neg'}">${money(c.profit)} (${fmt(c.marginAct)}%)</span>`]);
-    if (c.potentialSaving > 0.005) cs.push(['Saving at best-fit nest', `<span class="warn">${money(c.potentialSaving)} (${c.extraSheets} sheet${c.extraSheets === 1 ? '' : 's'})</span>`]);
-    $('costPreview').innerHTML = cs.map(([k, v]) => `<div class="stat"><span class="k">${k}</span><span class="v">${v}</span></div>`).join('');
+    if (c.potentialSaving > 0.005) cs.push(['Saving at best nest', `<span class="warn">${money(c.potentialSaving)} (${c.extraSheets} sheet${c.extraSheets === 1 ? '' : 's'})</span>`]);
+    $('costPreview').innerHTML = cs.map(statHTML).join('');
+
+    const showParts = c.parts.length > 1 && costOk;
+    $('partCostWrap').hidden = !showParts;
+    if (showParts) $('partCostRows').innerHTML = c.partCosts.map(pc => `<tr>
+      <td class="l"><i class="swatch" style="background:${partColor(pc.i)}"></i>${letter(pc.i)} ${esc(pc.name)}</td>
+      <td>${pc.good}</td><td>${money(pc.unit)}</td><td>${money(pc.price)}</td><td>${pc.sell ? money(pc.sell) : '–'}</td>
+      <td class="${Number.isFinite(pc.margin) ? (pc.margin >= 0 ? 'money-pos' : 'money-neg') : ''}">${Number.isFinite(pc.margin) ? fmt(pc.margin) + '%' : '–'}</td></tr>`).join('');
+
     if (!layoutEntryId) { clearTimeout(layoutTimer); layoutTimer = setTimeout(renderLayout, 120); }
   }
 
+  // ---------- Layout ----------
   let layoutEntryId = null, layoutSheet = 0, layoutTimer, layoutState = null;
+
+  function layoutMessage(msg) {
+    $('layout').innerHTML = `<p class="empty">${msg}</p>`;
+    $('layoutInfo').innerHTML = $('sheetNav').innerHTML = $('legend').innerHTML = '';
+    $('layoutNote').textContent = '';
+    $('slotInfo').textContent = '';
+    layoutState = null;
+  }
 
   function renderLayout() {
     let src = layoutEntryId ? entries.find(x => x.id === layoutEntryId) : null;
@@ -698,68 +889,80 @@
     if (!src) src = readForm();
     const e = compute(src);
     $('layoutTitle').textContent = layoutEntryId
-      ? `Saved entry: ${[e.date, e.job, e.part].filter(Boolean).join(' · ')}`
+      ? `Saved entry: ${[e.date, e.job, e.partNames].filter(Boolean).join(' · ')}`
       : 'Live preview of the entry form';
     $('layoutBack').classList.toggle('hidden', !layoutEntryId);
-    const plan = e.plan;
-    if (!plan) {
-      $('layout').innerHTML = '<p class="empty">Enter sheet size and part length × width to see the layout.</p>';
-      $('layoutInfo').innerHTML = $('sheetNav').innerHTML = $('layoutNote').textContent = '';
-      return;
-    }
+    const nest = e.nest;
+    if (!nest) return layoutMessage('Enter the sheet size and each part\'s length and width to see the layout.');
+    if (!nest.fits) return layoutMessage('A part is larger than the usable sheet area (after edge margin). Check its size or the sheet size.');
+    if (nest.tooMany) return layoutMessage(`Too many mixed parts to draw live (over ${MIXED_LIMIT.toLocaleString()}). Split the job into smaller entries to see a layout.`);
 
-    const sheets = Math.max(1, Math.floor(e.sheets || 1));
-    layoutSheet = Math.max(0, Math.min(layoutSheet, sheets - 1));
-    // Produced parts fill sheets in order: good parts first, then rejects.
-    const cap = plan.n, G = e.goodParts || 0, R = e.rejects || 0, start = layoutSheet * cap;
-    const clamp = v => Math.max(0, Math.min(cap, v));
-    const good = clamp(G - start), rej = clamp(G + R - start) - good;
+    const parts = e.parts;
+    const shown = Math.max(1, Math.floor(e.sheets || 1), nest.need || 0);
+    layoutSheet = Math.max(0, Math.min(layoutSheet, shown - 1));
+    let rects;
+    if (nest.mode === 'grid') {
+      const cap = nest.cap, G = parts[0].good || 0, R = parts[0].rejects || 0, start = layoutSheet * cap;
+      rects = nest.plan.rects.map((r, i) => ({ ...r, type: 0, status: start + i < G ? 'good' : start + i < G + R ? 'rej' : 'empty', label: start + i + 1 }));
+    } else {
+      rects = (nest.sheets[layoutSheet] || []).map(r => ({ ...r, label: letter(r.type) }));
+    }
 
     const SL = e.sheetL, SW = e.sheetW, m = e.margin || 0;
     const fs = Math.max(SL, SW) / 45, pad = fs * 2.2;
-    const labels = cap <= 400;
+    const labels = rects.length <= 400;
     let svg = `<svg viewBox="${-pad} ${-pad} ${SL + pad * 1.4} ${SW + pad * 1.4}" role="img" aria-label="Part layout on sheet">`;
     svg += `<rect x="0" y="0" width="${SL}" height="${SW}" fill="var(--sheet)" stroke="var(--muted)" stroke-width="${fs / 8}"/>`;
     if (m > 0) svg += `<rect x="${m}" y="${m}" width="${SL - 2 * m}" height="${SW - 2 * m}" fill="none" stroke="var(--muted)" stroke-width="${fs / 12}" stroke-dasharray="${fs / 2} ${fs / 3}"/>`;
-    plan.rects.forEach((r, i) => {
-      const kind = i < good ? 'good' : i < good + rej ? 'rej' : 'empty';
-      const fill = kind === 'good' ? 'var(--part)' : kind === 'rej' ? 'var(--reject)' : 'none';
-      const stroke = kind === 'empty' ? `stroke="var(--muted)" stroke-dasharray="${fs / 3} ${fs / 4}"` : 'stroke="var(--panel)"';
-      svg += `<rect data-i="${i}" x="${r.x}" y="${r.y}" width="${r.w}" height="${r.h}" fill="${fill}" ${stroke} stroke-width="${fs / 14}"><title>Slot ${i + 1}: ${fmt(r.w, 1)} × ${fmt(r.h, 1)} mm at (${fmt(r.x, 1)}, ${fmt(r.y, 1)})${kind === 'good' ? '' : kind === 'rej' ? ' (rejected)' : ' (unused)'}</title></rect>`;
+    rects.forEach((r, i) => {
+      const fill = r.status === 'good' ? partColor(r.type) : r.status === 'rej' ? 'var(--reject)' : 'none';
+      const stroke = r.status === 'empty' ? `stroke="var(--muted)" stroke-dasharray="${fs / 3} ${fs / 4}"` : 'stroke="var(--panel)"';
+      svg += `<rect data-i="${i}" x="${r.x}" y="${r.y}" width="${r.w}" height="${r.h}" fill="${fill}" ${stroke} stroke-width="${fs / 14}"></rect>`;
       const lf = Math.min(fs * 0.8, r.w / 3, r.h / 1.6);
       if (labels && lf > fs * 0.25)
-        svg += `<text x="${r.x + r.w / 2}" y="${r.y + r.h / 2}" font-size="${lf}" text-anchor="middle" dominant-baseline="central" fill="${kind === 'empty' ? 'var(--muted)' : 'var(--accent-text)'}" pointer-events="none">${start + i + 1}</text>`;
+        svg += `<text x="${r.x + r.w / 2}" y="${r.y + r.h / 2}" font-size="${lf}" text-anchor="middle" dominant-baseline="central" fill="${r.status === 'empty' ? 'var(--muted)' : '#fff'}" pointer-events="none">${r.label}</text>`;
     });
     svg += `<text x="${SL / 2}" y="${-fs * 0.7}" font-size="${fs}" text-anchor="middle" fill="var(--muted)">${fmt(SL, 0)} mm</text>`;
     svg += `<text x="${-fs * 0.7}" y="${SW / 2}" font-size="${fs}" text-anchor="middle" fill="var(--muted)" transform="rotate(-90 ${-fs * 0.7} ${SW / 2})">${fmt(SW, 0)} mm</text>`;
     svg += '</svg>';
     $('layout').innerHTML = svg;
     $('slotInfo').textContent = 'Tap a part on the sheet to see its size and position.';
-    layoutState = { rects: plan.rects, good, rej, start };
+    layoutState = { rects, parts };
 
-    $('sheetNav').innerHTML = sheets > 1
-      ? `<button type="button" data-sheet="-1" ${layoutSheet === 0 ? 'disabled' : ''}>‹</button><span>Sheet ${layoutSheet + 1} of ${sheets}</span><button type="button" data-sheet="1" ${layoutSheet === sheets - 1 ? 'disabled' : ''}>›</button>`
+    $('sheetNav').innerHTML = shown > 1
+      ? `<button type="button" data-sheet="-1" ${layoutSheet === 0 ? 'disabled' : ''}>‹</button><span>Sheet ${layoutSheet + 1} of ${shown}</span><button type="button" data-sheet="1" ${layoutSheet === shown - 1 ? 'disabled' : ''}>›</button>`
       : '';
 
-    const sheetArea = SL * SW, partArea = e.partAreaUsed;
-    const onSheetPct = (good * partArea) / sheetArea * 100;
+    const legend = parts.map((p, i) => `<span><i style="background:${partColor(i)}"></i>${letter(i)}${p.name ? ' ' + esc(p.name) : ''} (${fmt(p.L, 0)} × ${fmt(p.W, 0)})</span>`);
+    legend.push('<span><i style="background:var(--reject)"></i>Rejected</span>');
+    if (nest.mode === 'grid') legend.push('<span><i style="border:1px dashed var(--muted)"></i>Unused slot</span>');
+    legend.push('<span><i style="background:var(--sheet);border:1px solid var(--border)"></i>Scrap</span>');
+    $('legend').innerHTML = legend.join('');
+
+    const goodHere = rects.filter(r => r.status === 'good');
+    const rejHere = rects.filter(r => r.status === 'rej').length;
+    const sheetYield = goodHere.reduce((s, r) => s + partArea(parts[r.type]), 0) / (SL * SW) * 100;
     const info = [
-      ['Parts per sheet', cap],
-      ['Layout utilisation', fmt(e.nestPct) + '%'],
-      ['This sheet: good', good],
-      ['This sheet: rejected', rej],
-      ['This sheet: unused slots', cap - good - rej],
-      ['This sheet: yield', `<span class="${yieldClass(onSheetPct)}">${fmt(onSheetPct)}%</span>`],
+      ['Sheets needed', nest.need],
+      ['Sheets used', e.sheets],
+      ['This sheet: good', goodHere.length],
+      ['This sheet: rejected', rejHere],
     ];
-    $('layoutInfo').innerHTML = info.map(([k, v]) => `<div class="stat"><span class="k">${k}</span><span class="v">${v}</span></div>`).join('');
+    if (nest.mode === 'grid') info.push(['This sheet: unused slots', rects.length - goodHere.length - rejHere]);
+    info.push(['This sheet: yield', `<span class="${yieldClass(sheetYield)}">${fmt(sheetYield)}%</span>`]);
+    $('layoutInfo').innerHTML = info.map(statHTML).join('');
 
     const notes = [];
-    if (e.partArea > 0) notes.push('Parts are drawn as their length × width bounding rectangle; yield uses the net area you entered.');
-    if (G + R > cap * sheets) notes.push(`${G + R - cap * sheets} more part(s) were produced than this layout fits on ${sheets} sheet(s), so the actual nest was tighter than this rectangular layout.`);
-    notes.push('Layout is a computed guillotine nest (grid plus leftover strips, both orientations), not your CAM program\'s exact nest.');
+    if (parts.some(p => p.area > 0)) notes.push('Parts with a net area are drawn as their length × width rectangle; yield uses the net area.');
+    if (e.sheets < nest.need) notes.push(`This layout needs ${nest.need} sheets but the entry used ${e.sheets}, so the actual nest was tighter than this layout.`);
+    if (e.sheets > nest.need) notes.push(`The parts fit on ${nest.need} sheet${nest.need === 1 ? '' : 's'}; the remaining sheet${e.sheets - nest.need === 1 ? ' is' : 's are'} shown empty.`);
+    notes.push(nest.mode === 'grid'
+      ? 'Layout is a computed guillotine nest (grid plus leftover strips, both orientations), not your CAM program\'s exact nest.'
+      : 'Mixed parts are nested largest first with rotation allowed. It is a computed estimate, not your CAM program\'s exact nest.');
     $('layoutNote').textContent = notes.join(' ');
   }
 
+  // ---------- Table, summary, chart, groups ----------
   function filtered() {
     const q = $('fSearch').value.toLowerCase();
     const g = $('fGrade').value, t = $('fThick').value, from = $('fFrom').value, to = $('fTo').value;
@@ -768,7 +971,7 @@
       (!t || String(e.thickness) === t) &&
       (!from || e.date >= from) &&
       (!to || e.date <= to) &&
-      (!q || [e.job, e.part, e.operator, e.notes].join(' ').toLowerCase().includes(q))
+      (!q || [e.job, e.partNames, e.notes].join(' ').toLowerCase().includes(q))
     );
   }
 
@@ -782,27 +985,26 @@
     setOpts($('fThick'), [...new Set(entries.map(e => e.thickness))].sort((a, b) => a - b), v => v + ' mm');
   }
 
-  const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-
   function renderTable(list) {
     const rows = [...list].sort((a, b) => {
       const x = a[sort.k], y = b[sort.k];
-      return (typeof x === 'number' ? x - y : String(x).localeCompare(String(y))) * sort.dir;
+      if (typeof x === 'number' || typeof y === 'number') return (fin(x, -Infinity) - fin(y, -Infinity) || 0) * sort.dir;
+      return String(x ?? '').localeCompare(String(y ?? '')) * sort.dir;
     });
     $('rows').innerHTML = rows.length ? rows.map(e => `
       <tr title="${esc(e.notes)}">
         <td>${esc(e.date)}</td>
         <td class="l">${esc(e.job)}</td>
-        <td class="l">${esc(e.part)}</td>
+        <td class="l">${esc(e.partNames) || (e.parts.length > 1 ? e.parts.length + ' parts' : '')}</td>
         <td class="l">${esc(e.grade)} ${esc(e.finish)}</td>
         <td>${fmt(e.thickness, 2)}</td>
         <td>${e.sheets}</td>
         <td>${fmt(e.sheetKg, 1)}</td>
-        <td>${e.goodParts}${e.rejects ? ` <span class="bad">(+${e.rejects})</span>` : ''}</td>
+        <td>${e.good}${e.rejects ? ` <span class="bad">(+${e.rejects})</span>` : ''}</td>
         <td>${fmt(e.partKg, 1)}</td>
         <td>${fmt(e.scrapKg, 1)}</td>
         <td class="${yieldClass(e.yieldPct)}"><strong>${fmt(e.yieldPct)}%</strong></td>
-        <td>${Number.isFinite(e.nestPct) ? fmt(e.nestPct) + '%' : '–'}</td>
+        <td>${Number.isFinite(e.bestPct) ? fmt(e.bestPct) + '%' : '–'}</td>
         <td>${money(e.totalCost)}</td>
         <td><strong>${money(e.costPerPart)}</strong></td>
         <td>${money(e.scrapLoss)}</td>
@@ -815,26 +1017,23 @@
   }
 
   function renderKpis(list) {
-    const sum = k => list.reduce((s, e) => s + (e[k] || 0), 0);
-    const sheetKg = sum('sheetKg'), partKg = sum('partKg'), scrapKg = sum('scrapKg'), offcut = sum('offcut');
+    const sum = k => list.reduce((s, e) => s + fin(e[k]), 0);
     const totalArea = list.reduce((s, e) => s + e.sheetL * e.sheetW * e.sheets, 0);
-    const partArea = list.reduce((s, e) => s + e.partAreaUsed * e.goodParts, 0);
-    const overall = totalArea ? partArea / totalArea * 100 : NaN;
-    const rejects = sum('rejects'), good = sum('goodParts');
+    const overall = totalArea ? sum('goodArea') / totalArea * 100 : NaN;
+    const rejects = sum('rejects'), good = sum('good');
     const k = [
       ['Overall yield', `<span class="${yieldClass(overall)}">${fmt(overall)}%</span>`],
       ['Entries', list.length],
       ['Sheets used', sum('sheets').toLocaleString()],
-      ['Steel consumed', fmt(sheetKg, 0) + ' kg'],
-      ['In good parts', fmt(partKg, 0) + ' kg'],
-      ['Reusable offcut', fmt(offcut, 0) + ' kg'],
-      ['Scrap', fmt(scrapKg, 0) + ' kg'],
+      ['Steel consumed', fmt(sum('sheetKg'), 0) + ' kg'],
+      ['In good parts', fmt(sum('partKg'), 0) + ' kg'],
+      ['Scrap', fmt(sum('scrapKg'), 0) + ' kg'],
       ['Reject rate', good + rejects ? fmt(rejects / (good + rejects) * 100) + '%' : '–'],
       ['Material bought', money(sum('materialCost'), 0)],
       ['Value lost to scrap', `<span class="bad">${money(sum('scrapLoss'), 0)}</span>`],
       ['Total job cost', money(sum('totalCost'), 0)],
       ['Avg cost / part', good ? money(sum('totalCost') / good) : '–'],
-      ['Saving at best-fit nest', money(sum('potentialSaving'), 0)],
+      ['Saving at best nest', money(sum('potentialSaving'), 0)],
     ];
     const sold = list.filter(e => e.revenue > 0);
     if (sold.length) {
@@ -858,12 +1057,33 @@
     }
     data.forEach((e, i) => {
       const x = pl + i * bw + bw * 0.15, w = bw * 0.7, v = Number.isFinite(e.yieldPct) ? e.yieldPct : 0;
-      svg += `<rect x="${x}" y="${y(v)}" width="${w}" height="${pt + ih - y(v)}" rx="2" fill="var(--bar)"><title>${esc(e.date)} ${esc(e.job)} ${esc(e.part)}: ${fmt(v)}%</title></rect>`;
-      if (Number.isFinite(e.nestPct)) svg += `<line x1="${x}" x2="${x + w}" y1="${y(e.nestPct)}" y2="${y(e.nestPct)}" stroke="var(--text)" stroke-width="2" stroke-dasharray="3 2"><title>Best-fit nest: ${fmt(e.nestPct)}%</title></line>`;
+      svg += `<rect x="${x}" y="${y(v)}" width="${w}" height="${pt + ih - y(v)}" rx="2" fill="var(--bar)"><title>${esc(e.date)} ${esc(e.job)} ${esc(e.partNames)}: ${fmt(v)}%</title></rect>`;
+      if (Number.isFinite(e.bestPct)) svg += `<line x1="${x}" x2="${x + w}" y1="${y(e.bestPct)}" y2="${y(e.bestPct)}" stroke="var(--text)" stroke-width="2" stroke-dasharray="3 2"><title>Best nest: ${fmt(e.bestPct)}%</title></line>`;
       if (data.length <= 20 || i % Math.ceil(data.length / 12) === 0) svg += `<text x="${x + w / 2}" y="${H - 8}" text-anchor="middle">${esc(e.date.slice(5))}</text>`;
     });
     svg += '</svg>';
-    $('chart').innerHTML = svg + '<p class="note">Bars: actual yield. Dashed line: best-fit nest yield for that part on one sheet. Showing the latest 40 filtered entries.</p>';
+    $('chart').innerHTML = svg + '<p class="note">Bars: actual yield. Dashed line: yield at the best nest (fewest sheets the layout needs). Showing the latest 40 filtered entries.</p>';
+  }
+
+  function renderGroups(list) {
+    const groups = new Map();
+    for (const e of list) {
+      const key = `${e.grade}|${e.thickness}`;
+      if (!groups.has(key)) groups.set(key, []);
+      groups.get(key).push(e);
+    }
+    const rows = [...groups.values()].map(es => {
+      const sum = k => es.reduce((s, e) => s + fin(e[k]), 0);
+      const area = es.reduce((s, e) => s + e.sheetL * e.sheetW * e.sheets, 0);
+      const good = sum('good');
+      return { grade: es[0].grade, t: es[0].thickness, n: es.length, sheets: sum('sheets'), kg: sum('sheetKg'),
+        y: area ? sum('goodArea') / area * 100 : NaN, scrap: sum('scrapKg'), loss: sum('scrapLoss'), cost: sum('totalCost'), cpp: good ? sum('totalCost') / good : NaN };
+    }).sort((a, b) => a.grade.localeCompare(b.grade) || a.t - b.t);
+    $('groupRows').innerHTML = rows.length ? rows.map(r => `<tr>
+      <td class="l">${esc(r.grade)}</td><td>${fmt(r.t, 2)}</td><td>${r.n}</td><td>${r.sheets}</td><td>${fmt(r.kg, 0)}</td>
+      <td class="${yieldClass(r.y)}"><strong>${fmt(r.y)}%</strong></td><td>${fmt(r.scrap, 0)}</td><td>${money(r.loss, 0)}</td>
+      <td>${money(r.cost, 0)}</td><td>${money(r.cpp)}</td></tr>`).join('')
+      : '<tr><td colspan="10" class="empty">Appears once entries are added.</td></tr>';
   }
 
   function render() {
@@ -876,129 +1096,121 @@
     if (layoutEntryId) renderLayout();
   }
 
-  function renderGroups(list) {
-    const groups = new Map();
-    for (const e of list) {
-      const key = `${e.grade}|${e.thickness}`;
-      if (!groups.has(key)) groups.set(key, []);
-      groups.get(key).push(e);
-    }
-    const rows = [...groups.entries()].map(([key, es]) => {
-      const sum = k => es.reduce((s, e) => s + (e[k] || 0), 0);
-      const area = es.reduce((s, e) => s + e.sheetL * e.sheetW * e.sheets, 0);
-      const partArea = es.reduce((s, e) => s + e.partAreaUsed * e.goodParts, 0);
-      const good = sum('goodParts');
-      return { grade: es[0].grade, t: es[0].thickness, n: es.length, sheets: sum('sheets'), kg: sum('sheetKg'),
-        y: area ? partArea / area * 100 : NaN, scrap: sum('scrapKg'), loss: sum('scrapLoss'), cost: sum('totalCost'), cpp: good ? sum('totalCost') / good : NaN };
-    }).sort((a, b) => a.grade.localeCompare(b.grade) || a.t - b.t);
-    $('groupRows').innerHTML = rows.length ? rows.map(r => `<tr>
-      <td class="l">${esc(r.grade)}</td><td>${fmt(r.t, 2)}</td><td>${r.n}</td><td>${r.sheets}</td><td>${fmt(r.kg, 0)}</td>
-      <td class="${yieldClass(r.y)}"><strong>${fmt(r.y)}%</strong></td><td>${fmt(r.scrap, 0)}</td><td>${money(r.loss, 0)}</td>
-      <td>${money(r.cost, 0)}</td><td>${money(r.cpp)}</td></tr>`).join('')
-      : '<tr><td colspan="10" class="empty">Appears once entries are added.</td></tr>';
-  }
-
   // ---------- Quote & sheet planner ----------
-  let quotePick = null, quoteResult = null;
+  let quotePick = null, quoteResult = null, quoteTimer;
 
   function computeQuote() {
     const g = $('qGrade').value, f = $('qFinish').value, t = num('qThick');
-    const pL = num('qL'), pW = num('qW'), qty = Math.max(0, Math.floor(num('qQty') || 0));
-    const area = num('qArea') > 0 ? num('qArea') : pL * pW;
+    const parts = readPartRows('qPartRows', 'q');
     const kerf = num('qKerf') || 0, margin = num('qMargin') || 0;
-    const density = gradeInfo(g).density, price = autoMatPrice(g, f);
-    const kgPerMm2 = t * density / 1e6;
+    const qty = parts.reduce((s, p) => s + p.qty, 0);
+    const areaTotal = parts.reduce((s, p) => s + partArea(p) * p.qty, 0);
+    const price = autoMatPrice(g, f);
+    const kgPerMm2 = t * gradeInfo(g).density / 1e6;
+    const nparts = parts.map(p => ({ L: p.L, W: p.W, good: p.qty, rejects: 0 }));
     const sizes = SHEET_SIZES.map(([L, W, lab]) => ({ L, W, lab }));
     if (num('qCustL') > 0 && num('qCustW') > 0) sizes.push({ L: num('qCustL'), W: num('qCustW'), lab: 'custom' });
     const options = sizes.map(sz => {
-      const plan = nestPlan(sz.L, sz.W, pL, pW, kerf, margin);
-      const per = plan ? plan.n : 0;
-      const sheets = per > 0 && qty > 0 ? Math.ceil(qty / per) : NaN;
+      const nest = qty > 0 ? nestLayout(sz.L, sz.W, kerf, margin, nparts) : null;
+      const ok = nest && nest.fits && Number.isFinite(nest.need) && nest.need > 0;
+      const sheets = ok ? nest.need : NaN;
       const steelKg = sheets * sz.L * sz.W * kgPerMm2;
-      const partKg = area * qty * kgPerMm2;
-      const scrapKg = steelKg - partKg;
-      const netMat = steelKg * price;
-      return { ...sz, per, sheets, steelKg, scrapKg, netMat, y: sheets ? area * qty / (sheets * sz.L * sz.W) * 100 : NaN, matPerPart: qty ? netMat / qty : NaN };
+      const scrapKg = steelKg - areaTotal * kgPerMm2;
+      const mat = steelKg * price;
+      return { ...sz, ok, nest, per: ok && nest.mode === 'grid' ? nest.cap : null, sheets, steelKg, scrapKg, mat,
+        y: ok ? areaTotal / (sheets * sz.L * sz.W) * 100 : NaN, matPerPart: qty ? mat / qty : NaN, tooMany: nest && nest.tooMany };
     });
-    const valid = options.filter(o => Number.isFinite(o.netMat) && o.per > 0);
-    const best = valid.reduce((b, o) => !b || o.netMat < b.netMat - 1e-9 || (Math.abs(o.netMat - b.netMat) < 1e-9 && o.y > b.y) ? o : b, null);
-    const chosen = options.find(o => quotePick && o.L === quotePick.L && o.W === quotePick.W && o.per > 0) || best;
+    const valid = options.filter(o => o.ok && Number.isFinite(o.mat));
+    const best = valid.reduce((b, o) => !b || o.mat < b.mat - 1e-9 || (Math.abs(o.mat - b.mat) < 1e-9 && o.y > b.y) ? o : b, null);
+    const chosen = options.find(o => o.ok && quotePick && o.L === quotePick.L && o.W === quotePick.W) || best;
 
-    const machPart = fin(num('qMachPart'));
-    const cutMin = qty * machPart;
-    const setup = fin(num('qSetup')), other = fin(num('qOther'));
+    const labourMode = $('qLabourMode').value;
+    const setup = labourMode === 'part' ? 0 : fin(num('qSetup')), other = fin(num('qOther'));
+    const cutMin = parts.reduce((s, p) => s + p.qty * p.mach, 0);
     let q = null;
-    if (chosen) {
+    if (chosen && qty > 0) {
       const machine = cutMin * settings.machineRateMin;
-      const labour = (cutMin + setup) * settings.labourRateMin;
-      const direct = chosen.netMat + machine + labour + other;
-      const overhead = direct * settings.overheadPct / 100;
-      const total = direct + overhead;
-      const perPart = qty ? total / qty : NaN;
+      const labour = labourMode === 'part' ? settings.labourPerPart * qty : (cutMin + setup) * settings.labourRateMin;
+      const total = chosen.mat + machine + labour + other;
       const m = settings.marginPct;
-      const pricePart = m < 100 ? perPart / (1 - m / 100) : NaN;
-      q = { chosen, machine, labour, direct, overhead, total, perPart, pricePart, priceTotal: pricePart * qty, cutMin, machPart, setup, other, price };
+      const lines = parts.map((p, i) => {
+        const share = areaTotal > 0 ? partArea(p) * p.qty / areaTotal : 0;
+        const ownMach = p.qty * p.mach;
+        const alloc = (chosen.mat + other) * share + ownMach * settings.machineRateMin
+          + (labourMode === 'part' ? settings.labourPerPart * p.qty : (ownMach + setup * p.qty / qty) * settings.labourRateMin);
+        const unit = p.qty > 0 ? alloc / p.qty : NaN;
+        const pricePart = m < 100 ? unit / (1 - m / 100) : NaN;
+        return { i, name: p.name, qty: p.qty, mach: ownMach, unit, pricePart, line: pricePart * p.qty };
+      });
+      const priceTotal = lines.reduce((s, l) => s + fin(l.line), 0);
+      q = { chosen, machine, labour, labourMode, total, perPart: total / qty, priceTotal, cutMin, setup, other, price, lines };
     }
-    return { g, f, t, pL, pW, area, qty, kerf, margin, options, best, chosen, q };
+    return { g, f, t, parts, qty, kerf, margin, options, best, chosen, q };
   }
 
   function renderQuote() {
     const r = quoteResult = computeQuote();
+    const mixed = r.parts.length > 1;
     $('quoteRows').innerHTML = r.options.map((o, i) => {
-      const ok = o.per > 0 && Number.isFinite(o.sheets);
       const isPick = r.chosen && o.L === r.chosen.L && o.W === r.chosen.W;
       return `<tr class="pick ${o === r.best ? 'best' : ''}" data-q="${i}">
-        <td><input type="radio" name="qSheet" ${isPick ? 'checked' : ''} ${ok ? '' : 'disabled'} aria-label="Choose ${o.L} × ${o.W}"></td>
+        <td><input type="radio" name="qSheet" ${isPick ? 'checked' : ''} ${o.ok ? '' : 'disabled'} aria-label="Choose ${o.L} × ${o.W}"></td>
         <td class="l">${fmt(o.L, 0)} × ${fmt(o.W, 0)}${o.lab ? ` <span class="muted">${esc(o.lab)}</span>` : ''}${o === r.best ? ' <span class="good">cheapest</span>' : ''}</td>
-        <td>${ok ? o.per : '–'}</td><td>${ok ? o.sheets : '–'}</td>
-        <td class="${yieldClass(o.y)}">${ok ? fmt(o.y) + '%' : '–'}</td>
-        <td>${ok ? fmt(o.steelKg, 1) : '–'}</td><td>${ok ? fmt(o.scrapKg, 1) : '–'}</td>
-        <td>${ok ? money(o.netMat) : '–'}</td><td>${ok ? money(o.matPerPart) : '–'}</td></tr>`;
+        <td>${o.ok ? (o.per ?? (mixed ? 'mixed' : '–')) : o.tooMany ? 'too many' : '–'}</td><td>${o.ok ? o.sheets : '–'}</td>
+        <td class="${yieldClass(o.y)}">${o.ok ? fmt(o.y) + '%' : '–'}</td>
+        <td>${o.ok ? fmt(o.steelKg, 1) : '–'}</td><td>${o.ok ? fmt(o.scrapKg, 1) : '–'}</td>
+        <td>${o.ok ? money(o.mat) : '–'}</td><td>${o.ok ? money(o.matPerPart) : '–'}</td></tr>`;
     }).join('');
     const q = r.q;
     if (!q) {
-      $('quoteKpis').innerHTML = '<p class="empty">Enter part size, thickness and quantity. The part must fit on at least one sheet size.</p>';
+      $('quoteKpis').innerHTML = '<p class="empty">Enter thickness and each part\'s size and quantity. Every part must fit on at least one sheet size.</p>';
+      $('quoteParts').innerHTML = '';
       $('quoteNote').textContent = '';
       return;
     }
     const k = [
       [`Sheets of ${fmt(q.chosen.L, 0)} × ${fmt(q.chosen.W, 0)}`, q.chosen.sheets],
-      ['Material', money(q.chosen.netMat)],
+      ['Material', money(q.chosen.mat)],
       ['Machine time', `${fmt(q.cutMin, 0)} min`],
       ['Machine', money(q.machine)],
-      ['Labour (incl. setup)', money(q.labour)],
-      ['Overhead', money(q.overhead)],
+      [q.labourMode === 'part' ? `Labour (${r.qty} × ${money(settings.labourPerPart)})` : 'Labour (incl. setup)', money(q.labour)],
       ['Total cost', `<strong>${money(q.total)}</strong>`],
-      ['Cost / part', money(q.perPart)],
-      [`Price / part at ${fmt(settings.marginPct, 0)}%`, `<strong class="good">${money(q.pricePart)}</strong>`],
-      ['Quote total', `<strong>${money(q.priceTotal)}</strong>`],
+      ['Avg cost / part', money(q.perPart)],
+      [`Quote total at ${fmt(settings.marginPct, 0)}%`, `<strong class="good">${money(q.priceTotal)}</strong>`],
     ];
     $('quoteKpis').innerHTML = k.map(([a, b]) => `<div class="kpi stat"><span class="k">${a}</span><span class="v">${b}</span></div>`).join('');
-    const notes = [`Machine time ${fmt(q.machPart, 2)} min per part × ${r.qty} parts.`,
-      `Material at ${money(q.price)}/kg.`,
-      'Leftover from the last sheet is counted as scrap; if you keep it as offcut the real cost is lower.'];
+    $('quoteParts').innerHTML = q.lines.map(l => `<tr>
+      <td class="l"><i class="swatch" style="background:${partColor(l.i)}"></i>${letter(l.i)} ${esc(l.name)}</td>
+      <td>${l.qty}</td><td>${fmt(l.mach, 1)}</td><td>${money(l.unit)}</td><td><strong>${money(l.pricePart)}</strong></td><td>${money(l.line)}</td></tr>`).join('');
+    const notes = [`Material at ${money(q.price)}/kg.`];
+    if (mixed) notes.push('Material and other costs are shared between parts by area; each part carries its own machine time.');
+    notes.push('Leftover from the last sheet is counted as scrap.');
     $('quoteNote').textContent = notes.join(' ');
   }
+  function scheduleQuote() { clearTimeout(quoteTimer); quoteTimer = setTimeout(renderQuote, 150); }
 
   function quoteText() {
     const r = quoteResult, q = r && r.q;
     if (!q) return '';
     const gName = (GRADES.find(x => x[0] === r.g) || [r.g, r.g])[1];
     return [
-      `Quote: ${r.qty} × ${fmt(r.pL, 0)} × ${fmt(r.pW, 0)} mm, ${gName} ${r.f}, ${fmt(r.t, 2)} mm`,
-      `Material: ${q.chosen.sheets} sheet(s) ${fmt(q.chosen.L, 0)} × ${fmt(q.chosen.W, 0)} mm, ${q.chosen.per} parts/sheet, yield ${fmt(q.chosen.y)}%`,
-      `Material: ${money(q.chosen.netMat)}`,
-      `Machine: ${fmt(q.cutMin, 0)} min ${money(q.machine)}, labour incl. ${fmt(q.setup, 0)} min setup ${money(q.labour)}`,
+      `Quote: ${gName} ${r.f}, ${fmt(r.t, 2)} mm`,
+      ...q.lines.map(l => {
+        const p = r.parts[l.i];
+        return `- ${p.name || 'Part ' + letter(l.i)}: ${l.qty} × ${fmt(p.L, 0)} × ${fmt(p.W, 0)} mm at ${money(l.pricePart)} each = ${money(l.line)}`;
+      }),
+      `Material: ${q.chosen.sheets} sheet(s) ${fmt(q.chosen.L, 0)} × ${fmt(q.chosen.W, 0)} mm, yield ${fmt(q.chosen.y)}%, ${money(q.chosen.mat)}`,
+      `Machine: ${fmt(q.cutMin, 0)} min, ${money(q.machine)}`,
+      q.labourMode === 'part' ? `Labour: ${r.qty} parts × ${money(settings.labourPerPart)} = ${money(q.labour)}` : `Labour: ${fmt(q.cutMin + q.setup, 0)} min incl. ${fmt(q.setup, 0)} min setup, ${money(q.labour)}`,
       q.other ? `Other: ${money(q.other)}` : null,
-      `Overhead ${fmt(settings.overheadPct, 0)}%: ${money(q.overhead)}`,
-      `Total cost: ${money(q.total)} (${money(q.perPart)} per part)`,
-      `Price at ${fmt(settings.marginPct, 0)}% margin: ${money(q.pricePart)} per part, ${money(q.priceTotal)} total`,
+      `Total cost: ${money(q.total)}`,
+      `Quote total at ${fmt(settings.marginPct, 0)}% margin: ${money(q.priceTotal)}`,
     ].filter(Boolean).join('\n');
   }
 
   // ---------- Settings UI ----------
-  const SETTING_FIELDS = { sCurrency: 'currency', sMachineRate: 'machineRateMin', sLabourRate: 'labourRateMin', sOverheadPct: 'overheadPct',
-    sMarginPct: 'marginPct', sOffcutPct: 'offcutPct', sYieldGood: 'yieldGood', sYieldWarn: 'yieldWarn' };
+  const SETTING_FIELDS = { sCurrency: 'currency', sMachineRate: 'machineRateMin', sLabourMode: 'labourMode', sLabourRate: 'labourRateMin',
+    sLabourFee: 'labourPerPart', sMarginPct: 'marginPct', sYieldGood: 'yieldGood', sYieldWarn: 'yieldWarn' };
 
   function renderSettings() {
     for (const [id, k] of Object.entries(SETTING_FIELDS)) $(id).value = settings[k];
@@ -1010,13 +1222,16 @@
     }).join('');
     $('finishRows').innerHTML = FINISHES.map((f, i) => `<tr><td class="l">${esc(f)}</td>
       <td><input type="number" inputmode="decimal" step="0.01" id="fs-${i}" data-f="${esc(f)}" value="${settings.finishes[f]}"></td></tr>`).join('');
+    updateCurrencyLabels();
+  }
+  function updateCurrencyLabels() {
     document.querySelectorAll('.cur').forEach(el => { el.textContent = settings.currency; });
   }
 
   function onSettingsChanged() {
     saveSettings();
-    document.querySelectorAll('.cur').forEach(el => { el.textContent = settings.currency; });
-    if (!$('editId').value) applyAutoPrices();
+    updateCurrencyLabels();
+    if (!$('editId').value) { applyAutoPrices(); applyLabourDefaults(); }
     updatePreview();
     render();
     renderQuote();
@@ -1035,9 +1250,11 @@
   function resetForm() {
     $('entryForm').reset();
     $('editId').value = '';
-    $('date').value = new Date().toISOString().slice(0, 10);
+    $('date').value = today();
     editRates = null;
+    setPartRows('partRows', 'e', [{ good: '', rejects: 0 }]);
     applyAutoPrices();
+    applyLabourDefaults();
     syncSheetPreset();
     $('formTitle').textContent = 'New entry';
     $('submitBtn').textContent = 'Save entry';
@@ -1045,22 +1262,65 @@
     updatePreview();
   }
 
-  // Events
+  // ---------- Events ----------
   $('grade').addEventListener('change', () => { applyAutoPrices(); updatePreview(); });
   $('finish').addEventListener('change', () => { applyAutoPrices(); updatePreview(); });
+  $('labourMode').addEventListener('change', () => { syncLabourUI(); updatePreview(); });
+  $('qLabourMode').addEventListener('change', syncLabourUI);
   $('sheetPreset').addEventListener('change', () => {
     const v = $('sheetPreset').value;
     if (v !== 'custom') { const [L, W] = v.split('x'); $('sheetL').value = L; $('sheetW').value = W; updatePreview(); }
   });
   $('sheetL').addEventListener('input', syncSheetPreset);
   $('sheetW').addEventListener('input', syncSheetPreset);
+  $('entryForm').addEventListener('input', updatePreview);
+  $('resetBtn').addEventListener('click', resetForm);
+  $('cancelEdit').addEventListener('click', resetForm);
+
+  $('addPart').addEventListener('click', () => { addPartRow('partRows', 'e'); updatePreview(); });
+  $('addQPart').addEventListener('click', () => { addPartRow('qPartRows', 'q'); scheduleQuote(); });
+  for (const [id, after] of [['partRows', updatePreview], ['qPartRows', scheduleQuote]]) {
+    $(id).addEventListener('click', ev => {
+      const btn = ev.target.closest('[data-remove-part]');
+      if (!btn) return;
+      btn.closest('.part-row').remove();
+      renumberRows($(id));
+      after();
+    });
+  }
+
+  // Steppers anywhere on the page, including part rows added later.
+  document.addEventListener('click', ev => {
+    const b = ev.target.closest('.stepper button');
+    if (!b) return;
+    const inp = $(b.dataset.for), min = Number(inp.min || 0);
+    inp.value = Math.max(min, (parseInt(inp.value, 10) || 0) + Number(b.dataset.step));
+    inp.dispatchEvent(new Event('input', { bubbles: true }));
+  });
+
+  $('layout').addEventListener('click', ev => {
+    const el = ev.target.closest('rect[data-i]');
+    if (!el || !layoutState) return;
+    document.querySelectorAll('#layout rect.sel').forEach(x => x.classList.remove('sel'));
+    el.classList.add('sel');
+    const r = layoutState.rects[Number(el.dataset.i)], p = layoutState.parts[r.type];
+    const status = r.status === 'good' ? 'good' : r.status === 'rej' ? 'rejected' : 'unused slot';
+    const name = `${letter(r.type)}${p.name ? ' ' + p.name : ''}`;
+    $('slotInfo').textContent = `${name} (${status}): ${fmt(r.w, 1)} × ${fmt(r.h, 1)} mm, corner at ${fmt(r.x, 1)} mm along length, ${fmt(r.y, 1)} mm along width.`;
+  });
+  $('layoutBack').addEventListener('click', () => { layoutEntryId = null; layoutSheet = 0; renderLayout(); });
+  $('sheetNav').addEventListener('click', ev => {
+    const d = Number(ev.target.dataset.sheet);
+    if (d) { layoutSheet += d; renderLayout(); }
+  });
 
   // Settings events
   $('settingsPanel').addEventListener('input', ev => {
     const el = ev.target;
     if (SETTING_FIELDS[el.id]) {
       const k = SETTING_FIELDS[el.id];
-      if (k === 'currency') settings.currency = el.value || '$';
+      if (k === 'currency') settings.currency = el.value || 'EGP';
+      else if (k === 'labourMode') settings.labourMode = el.value === 'part' ? 'part' : 'min';
       else if (Number.isFinite(parseFloat(el.value))) settings[k] = parseFloat(el.value);
       else return;
     } else if (el.dataset.g) {
@@ -1072,6 +1332,7 @@
       if (!Number.isFinite(v)) return;
       settings.finishes[el.dataset.f] = v;
     } else return;
+    if (el.id === 'sLabourMode') { $('qLabourMode').value = settings.labourMode; syncLabourUI(); }
     onSettingsChanged();
   });
   $('resetSettings').addEventListener('click', ev => confirmTap(ev.currentTarget, 'Tap again to reset prices & rates', () => {
@@ -1082,13 +1343,13 @@
   }));
 
   // Quote events
-  $('quoteSection').addEventListener('input', ev => { if (ev.target.name !== 'qSheet') renderQuote(); });
-  $('quoteSection').addEventListener('change', ev => { if (ev.target.tagName === 'SELECT') renderQuote(); });
+  $('quoteSection').addEventListener('input', ev => { if (ev.target.name !== 'qSheet') scheduleQuote(); });
+  $('quoteSection').addEventListener('change', ev => { if (ev.target.tagName === 'SELECT') scheduleQuote(); });
   $('quoteRows').addEventListener('click', ev => {
     const tr = ev.target.closest('tr[data-q]');
     if (!tr || !quoteResult) return;
     const o = quoteResult.options[Number(tr.dataset.q)];
-    if (!(o.per > 0)) return;
+    if (!o.ok) return;
     quotePick = { L: o.L, W: o.W };
     renderQuote();
   });
@@ -1100,6 +1361,7 @@
     else fallback();
   });
   $('quoteToForm').addEventListener('click', () => {
+    renderQuote();
     const r = quoteResult, q = r && r.q;
     if (!q) { notify('Fill in the quote first.', true); return; }
     resetForm();
@@ -1107,45 +1369,25 @@
     $('thickness').value = r.t;
     $('sheetL').value = q.chosen.L; $('sheetW').value = q.chosen.W; syncSheetPreset();
     $('sheets').value = q.chosen.sheets;
-    $('partL').value = r.pL; $('partW').value = r.pW;
-    $('partArea').value = num('qArea') > 0 ? num('qArea') : '';
-    $('goodParts').value = r.qty; $('rejects').value = 0;
     $('kerf').value = r.kerf; $('margin').value = r.margin;
+    setPartRows('partRows', 'e', r.parts.map((p, i) => ({ name: p.name, L: p.L, W: p.W, area: p.area, good: p.qty, rejects: 0, sell: +fin(q.lines[i].pricePart).toFixed(2) })));
     $('machineMin').value = +q.cutMin.toFixed(1);
+    $('labourMode').value = q.labourMode;
     $('labourMin').value = +(q.cutMin + q.setup).toFixed(1);
+    $('labourPerPart').value = settings.labourPerPart;
     $('otherCost').value = q.other;
-    $('sellPrice').value = +q.pricePart.toFixed(2);
+    syncLabourUI();
     updatePreview();
     $('formTitle').scrollIntoView({ behavior: 'smooth' });
     notify('Quote loaded into the entry form. Adjust to actuals after cutting, then save.');
-  });
-  $('entryForm').addEventListener('input', updatePreview);
-  $('resetBtn').addEventListener('click', resetForm);
-  $('cancelEdit').addEventListener('click', resetForm);
-  $('layout').addEventListener('click', ev => {
-    const el = ev.target.closest('rect[data-i]');
-    if (!el || !layoutState) return;
-    document.querySelectorAll('#layout rect.sel').forEach(x => x.classList.remove('sel'));
-    el.classList.add('sel');
-    const i = Number(el.dataset.i), r = layoutState.rects[i];
-    const status = i < layoutState.good ? 'good part' : i < layoutState.good + layoutState.rej ? 'rejected part' : 'unused slot';
-    $('slotInfo').textContent = `Part ${layoutState.start + i + 1} (${status}): ${fmt(r.w, 1)} × ${fmt(r.h, 1)} mm, corner at ${fmt(r.x, 1)} mm along length, ${fmt(r.y, 1)} mm along width.`;
-  });
-  document.querySelectorAll('.stepper button').forEach(b => b.addEventListener('click', () => {
-    const inp = $(b.dataset.for), min = Number(inp.min || 0);
-    inp.value = Math.max(min, (parseInt(inp.value, 10) || 0) + Number(b.dataset.step));
-    inp.dispatchEvent(new Event('input', { bubbles: true }));
-  }));
-  $('layoutBack').addEventListener('click', () => { layoutEntryId = null; layoutSheet = 0; renderLayout(); });
-  $('sheetNav').addEventListener('click', ev => {
-    const d = Number(ev.target.dataset.sheet);
-    if (d) { layoutSheet += d; renderLayout(); }
   });
 
   $('entryForm').addEventListener('submit', ev => {
     ev.preventDefault();
     const e = readForm();
-    if (!(e.partArea > 0) && !(e.partL > 0 && e.partW > 0)) { notify('Enter part length and width, or a net area per part.', true); return; }
+    const bad = e.parts.findIndex(p => !(p.L > 0 && p.W > 0));
+    if (bad >= 0) { notify(`Enter a length and width for part ${letter(bad)}.`, true); return; }
+    if (!e.parts.some(p => p.good > 0)) { notify('Enter how many good parts were produced.', true); return; }
     const editId = $('editId').value;
     if (editId) {
       const i = entries.findIndex(x => String(x.id) === editId);
@@ -1156,10 +1398,11 @@
     save();
     resetForm();
     render();
+    notify(editId ? 'Entry updated.' : 'Entry saved.');
   });
 
   $('rows').addEventListener('click', ev => {
-    const edit = ev.target.dataset.edit, del = ev.target.dataset.del, lay = ev.target.dataset.layout, cp = ev.target.dataset.copy;
+    const { edit, del, layout: lay, copy: cp } = ev.target.dataset;
     if (lay) {
       layoutEntryId = Number(lay);
       layoutSheet = 0;
@@ -1171,7 +1414,7 @@
       fillForm(e);
       $('editId').value = e.id;
       const c = compute(e);
-      editRates = { machineRateMin: c.machineRateMin, labourRateMin: c.labourRateMin, overheadPct: c.overheadPct, offcutPct: c.offcutPct, marginPct: c.marginPct };
+      editRates = { machineRateMin: c.machineRateMin, labourRateMin: c.labourRateMin, marginPct: c.marginPct };
       $('formTitle').textContent = 'Edit entry';
       $('submitBtn').textContent = 'Update entry';
       $('cancelEdit').classList.remove('hidden');
@@ -1181,7 +1424,7 @@
       const e = entries.find(x => String(x.id) === cp);
       if (!e) return;
       resetForm();
-      fillForm({ ...e, date: new Date().toISOString().slice(0, 10) });
+      fillForm({ ...e, date: today() });
       updatePreview();
       $('formTitle').scrollIntoView({ behavior: 'smooth' });
       notify('Copied into a new entry. Update the counts and save.');
@@ -1201,6 +1444,7 @@
   }));
   ['fSearch', 'fGrade', 'fThick', 'fFrom', 'fTo'].forEach(id => $(id).addEventListener('input', render));
 
+  // ---------- Export / import ----------
   let exportFile = null;
   function download(name, text, type) {
     const a = document.createElement('a');
@@ -1225,12 +1469,16 @@
   });
 
   $('exportCsv').addEventListener('click', () => {
-    const cols = ['date','job','part','operator','grade','finish','thickness','density','sheetL','sheetW','sheets','partL','partW','partAreaUsed','goodParts','rejects','offcut','kerf','margin','sheetKg','partKg','scrapKg','yieldPct','effPct','perSheet','nestPct','matPrice','machineMin','machineRateMin','labourMin','labourRateMin','otherCost','sellPrice','materialCost','offcutCredit','netMaterial','machineCost','labourCost','overheadCost','totalCost','costPerPart','quotePerPart','scrapLoss','revenue','profit','marginAct','potentialSaving','notes'];
+    const cols = ['date', 'job', 'partsText', 'grade', 'finish', 'thickness', 'density', 'sheetL', 'sheetW', 'sheets', 'kerf', 'margin', 'good', 'rejects',
+      'sheetKg', 'partKg', 'scrapKg', 'yieldPct', 'minSheets', 'bestPct', 'matPrice', 'machineMin', 'machineRateMin', 'labourMode', 'labourMin',
+      'labourRateMin', 'labourPerPart', 'otherCost', 'materialCost', 'machineCost', 'labourCost', 'totalCost', 'costPerPart', 'quotePerPart',
+      'scrapLoss', 'revenue', 'profit', 'marginAct', 'potentialSaving', 'notes'];
     const cell = v => typeof v === 'number' ? (Number.isFinite(v) ? +v.toFixed(3) : '') : `"${String(v ?? '').replace(/"/g, '""')}"`;
-    const csv = [cols.join(','), ...filtered().map(e => cols.map(c => cell(e[c])).join(','))].join('\n');
-    showExport(`CSV of ${filtered().length} filtered entries`, `sheet-yield-${new Date().toISOString().slice(0, 10)}.csv`, csv, 'text/csv');
+    const list = filtered();
+    const csv = [cols.join(','), ...list.map(e => cols.map(c => cell(e[c])).join(','))].join('\n');
+    showExport(`CSV of ${list.length} filtered entries`, `sheet-yield-${today()}.csv`, csv, 'text/csv');
   });
-  $('exportJson').addEventListener('click', () => showExport(`Backup of all ${entries.length} entries plus prices & rates (JSON)`, 'sheet-yield-backup.json', JSON.stringify({ version: 2, entries, settings }, null, 2), 'application/json'));
+  $('exportJson').addEventListener('click', () => showExport(`Backup of all ${entries.length} entries plus prices & rates (JSON)`, 'sheet-yield-backup.json', JSON.stringify({ version: 3, entries, settings }, null, 2), 'application/json'));
   $('importBtn').addEventListener('click', () => $('importFile').click());
   $('importFile').addEventListener('change', async () => {
     const f = $('importFile').files[0];
@@ -1243,9 +1491,10 @@
       const added = list.filter(e => e && e.id && !ids.has(e.id));
       entries.push(...added);
       save();
-      if (!Array.isArray(data) && data.settings) { settings = mergeSettings(data.settings); saveSettings(); renderSettings(); onSettingsChanged(); }
+      const withSettings = !Array.isArray(data) && data.settings;
+      if (withSettings) { settings = mergeSettings(data.settings); saveSettings(); renderSettings(); onSettingsChanged(); }
       render();
-      notify(`Imported ${added.length} entr${added.length === 1 ? 'y' : 'ies'}${!Array.isArray(data) && data.settings ? ' and prices & rates' : ''}.`);
+      notify(`Imported ${added.length} entr${added.length === 1 ? 'y' : 'ies'}${withSettings ? ' and prices & rates' : ''}.`);
     } catch (err) {
       notify('Could not read that file. Choose a backup .json exported from this page.', true);
     }
@@ -1261,8 +1510,11 @@
     });
   });
 
+  // ---------- Start ----------
   fillSelects();
   renderSettings();
+  $('qLabourMode').value = settings.labourMode;
+  setPartRows('qPartRows', 'q', [{ name: '', L: 500, W: 300, qty: 100, mach: 0.5 }]);
   resetForm();
   render();
   renderQuote();
