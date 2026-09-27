@@ -203,8 +203,6 @@
       <label>Overhead (% of direct cost)<input type="number" inputmode="decimal" id="sOverheadPct" step="0.1" min="0"></label>
       <label>Target margin (% of price)<input type="number" inputmode="decimal" id="sMarginPct" step="0.1" min="0" max="95"></label>
       <label>Offcut value (% of material price)<input type="number" inputmode="decimal" id="sOffcutPct" step="1" min="0" max="100"></label>
-      <label>Cutting speed (mm/min)<input type="number" inputmode="decimal" id="sCutSpeed" step="10" min="1"></label>
-      <label>Pierce time (seconds)<input type="number" inputmode="decimal" id="sPierceSec" step="0.1" min="0"></label>
       <label>Good yield from (%)<input type="number" inputmode="decimal" id="sYieldGood" step="1" min="0" max="100"></label>
       <label>Warning yield from (%)<input type="number" inputmode="decimal" id="sYieldWarn" step="1" min="0" max="100"></label>
     </div>
@@ -317,7 +315,7 @@
 
   <section id="quoteSection">
     <h2>Job quote &amp; sheet planner</h2>
-    <p class="note" style="margin-top:-6px">Price a job before cutting. Compares standard sheet sizes and estimates cutting time and cost using Prices &amp; rates.</p>
+    <p class="note" style="margin-top:-6px">Price a job before cutting. Compares standard sheet sizes and works out material, machine and labour cost using Prices &amp; rates.</p>
     <div class="grid">
       <label>Grade<select id="qGrade" class="grade-select"></select></label>
       <label>Finish<select id="qFinish" class="finish-select"></select></label>
@@ -326,9 +324,7 @@
       <label>Part width (mm)<input type="number" inputmode="decimal" id="qW" step="0.1" min="0" value="300"></label>
       <label>Net area / part (mm²)<input type="number" inputmode="decimal" id="qArea" step="1" min="0" placeholder="optional"></label>
       <label>Quantity<span class="stepper"><button type="button" data-step="-1" data-for="qQty" aria-label="Decrease">−</button><input type="number" inputmode="numeric" pattern="[0-9]*" id="qQty" step="1" min="1" value="100"><button type="button" data-step="1" data-for="qQty" aria-label="Increase">+</button></span></label>
-      <label>Cut length / part (mm)<input type="number" inputmode="decimal" id="qPerim" step="1" min="0" placeholder="blank = outline of L × W"></label>
-      <label>Pierces / part<input type="number" inputmode="numeric" id="qPierce" step="1" min="0" value="1"></label>
-      <label>Cutting speed (mm/min)<input type="number" inputmode="decimal" id="qSpeed" step="10" min="1"></label>
+      <label>Machine time / part (min)<input type="number" inputmode="decimal" id="qMachPart" step="0.01" min="0" value="0.5"></label>
       <label>Kerf / gap (mm)<input type="number" inputmode="decimal" id="qKerf" step="0.1" min="0" value="3"></label>
       <label>Edge margin (mm)<input type="number" inputmode="decimal" id="qMargin" step="0.1" min="0" value="10"></label>
       <label>Setup time (min)<input type="number" inputmode="decimal" id="qSetup" step="1" min="0" value="20"></label>
@@ -440,7 +436,7 @@
   // Example values only; users replace them with their own supplier prices and shop rates.
   const DEFAULT_SETTINGS = {
     currency: 'EGP', machineRateMin: 25, labourRateMin: 2.5, overheadPct: 15, marginPct: 25, offcutPct: 70,
-    cutSpeed: 3000, pierceSec: 1.5, yieldGood: 80, yieldWarn: 65,
+    yieldGood: 80, yieldWarn: 65,
     grades: {
       '304': { density: 7.93, price: 160 },
       '316': { density: 7.98, price: 250 },
@@ -928,10 +924,8 @@
     const best = valid.reduce((b, o) => !b || o.netMat < b.netMat - 1e-9 || (Math.abs(o.netMat - b.netMat) < 1e-9 && o.y > b.y) ? o : b, null);
     const chosen = options.find(o => quotePick && o.L === quotePick.L && o.W === quotePick.W && o.per > 0) || best;
 
-    const perim = num('qPerim') > 0 ? num('qPerim') : 2 * (pL + pW);
-    const speed = num('qSpeed') > 0 ? num('qSpeed') : settings.cutSpeed;
-    const pierces = fin(num('qPierce'));
-    const cutMin = qty * (perim / speed + pierces * settings.pierceSec / 60);
+    const machPart = fin(num('qMachPart'));
+    const cutMin = qty * machPart;
     const setup = fin(num('qSetup')), other = fin(num('qOther'));
     let q = null;
     if (chosen) {
@@ -943,7 +937,7 @@
       const perPart = qty ? total / qty : NaN;
       const m = settings.marginPct;
       const pricePart = m < 100 ? perPart / (1 - m / 100) : NaN;
-      q = { chosen, machine, labour, direct, overhead, total, perPart, pricePart, priceTotal: pricePart * qty, cutMin, setup, other, perim, speed, price };
+      q = { chosen, machine, labour, direct, overhead, total, perPart, pricePart, priceTotal: pricePart * qty, cutMin, machPart, setup, other, price };
     }
     return { g, f, t, pL, pW, area, qty, kerf, margin, options, best, chosen, q };
   }
@@ -970,7 +964,7 @@
     const k = [
       [`Sheets of ${fmt(q.chosen.L, 0)} × ${fmt(q.chosen.W, 0)}`, q.chosen.sheets],
       ['Material', money(q.chosen.netMat)],
-      ['Cutting time', `${fmt(q.cutMin, 0)} min`],
+      ['Machine time', `${fmt(q.cutMin, 0)} min`],
       ['Machine', money(q.machine)],
       ['Labour (incl. setup)', money(q.labour)],
       ['Overhead', money(q.overhead)],
@@ -980,7 +974,7 @@
       ['Quote total', `<strong>${money(q.priceTotal)}</strong>`],
     ];
     $('quoteKpis').innerHTML = k.map(([a, b]) => `<div class="kpi stat"><span class="k">${a}</span><span class="v">${b}</span></div>`).join('');
-    const notes = [`Cut length ${fmt(q.perim, 0)} mm per part at ${fmt(q.speed, 0)} mm/min, ${fmt(settings.pierceSec, 1)} s per pierce.`,
+    const notes = [`Machine time ${fmt(q.machPart, 2)} min per part × ${r.qty} parts.`,
       `Material at ${money(q.price)}/kg.`,
       'Leftover from the last sheet is counted as scrap; if you keep it as offcut the real cost is lower.'];
     $('quoteNote').textContent = notes.join(' ');
@@ -994,7 +988,7 @@
       `Quote: ${r.qty} × ${fmt(r.pL, 0)} × ${fmt(r.pW, 0)} mm, ${gName} ${r.f}, ${fmt(r.t, 2)} mm`,
       `Material: ${q.chosen.sheets} sheet(s) ${fmt(q.chosen.L, 0)} × ${fmt(q.chosen.W, 0)} mm, ${q.chosen.per} parts/sheet, yield ${fmt(q.chosen.y)}%`,
       `Material: ${money(q.chosen.netMat)}`,
-      `Cutting: ${fmt(q.cutMin, 0)} min machine ${money(q.machine)}, labour incl. ${fmt(q.setup, 0)} min setup ${money(q.labour)}`,
+      `Machine: ${fmt(q.cutMin, 0)} min ${money(q.machine)}, labour incl. ${fmt(q.setup, 0)} min setup ${money(q.labour)}`,
       q.other ? `Other: ${money(q.other)}` : null,
       `Overhead ${fmt(settings.overheadPct, 0)}%: ${money(q.overhead)}`,
       `Total cost: ${money(q.total)} (${money(q.perPart)} per part)`,
@@ -1004,7 +998,7 @@
 
   // ---------- Settings UI ----------
   const SETTING_FIELDS = { sCurrency: 'currency', sMachineRate: 'machineRateMin', sLabourRate: 'labourRateMin', sOverheadPct: 'overheadPct',
-    sMarginPct: 'marginPct', sOffcutPct: 'offcutPct', sCutSpeed: 'cutSpeed', sPierceSec: 'pierceSec', sYieldGood: 'yieldGood', sYieldWarn: 'yieldWarn' };
+    sMarginPct: 'marginPct', sOffcutPct: 'offcutPct', sYieldGood: 'yieldGood', sYieldWarn: 'yieldWarn' };
 
   function renderSettings() {
     for (const [id, k] of Object.entries(SETTING_FIELDS)) $(id).value = settings[k];
@@ -1017,7 +1011,6 @@
     $('finishRows').innerHTML = FINISHES.map((f, i) => `<tr><td class="l">${esc(f)}</td>
       <td><input type="number" inputmode="decimal" step="0.01" id="fs-${i}" data-f="${esc(f)}" value="${settings.finishes[f]}"></td></tr>`).join('');
     document.querySelectorAll('.cur').forEach(el => { el.textContent = settings.currency; });
-    if (!$('qSpeed').value) $('qSpeed').value = settings.cutSpeed;
   }
 
   function onSettingsChanged() {
