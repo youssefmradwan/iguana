@@ -197,9 +197,9 @@
     <summary>Prices &amp; rates</summary>
     <p class="note" style="margin-top:0">These are used for new entries and quotes. Saved entries keep the prices and rates they were saved with. The starting values are examples only; replace them with your supplier prices and shop rates.</p>
     <div class="grid">
-      <label>Currency symbol<input type="text" id="sCurrency" maxlength="4"></label>
-      <label><span>Machine rate (<span class="cur"></span>/hr)</span><input type="number" inputmode="decimal" id="sMachineRate" step="0.01" min="0"></label>
-      <label><span>Labour rate (<span class="cur"></span>/hr)</span><input type="number" inputmode="decimal" id="sLabourRate" step="0.01" min="0"></label>
+      <label>Currency<input type="text" id="sCurrency" maxlength="4"></label>
+      <label><span>Machine rate (<span class="cur"></span>/min)</span><input type="number" inputmode="decimal" id="sMachineRate" step="0.01" min="0"></label>
+      <label><span>Labour rate (<span class="cur"></span>/min)</span><input type="number" inputmode="decimal" id="sLabourRate" step="0.01" min="0"></label>
       <label>Overhead (% of direct cost)<input type="number" inputmode="decimal" id="sOverheadPct" step="0.1" min="0"></label>
       <label>Target margin (% of price)<input type="number" inputmode="decimal" id="sMarginPct" step="0.1" min="0" max="95"></label>
       <label>Offcut value (% of material price)<input type="number" inputmode="decimal" id="sOffcutPct" step="1" min="0" max="100"></label>
@@ -210,7 +210,7 @@
     </div>
     <div class="subhead">Grades</div>
     <div class="table-wrap">
-      <table class="compact"><thead><tr><th>Grade</th><th>Density (g/cm³)</th><th>Price (<span class="cur"></span>/kg)</th><th>Scrap value (<span class="cur"></span>/kg)</th></tr></thead><tbody id="gradeRows"></tbody></table>
+      <table class="compact"><thead><tr><th>Grade</th><th>Density (g/cm³)</th><th>Price (<span class="cur"></span>/kg)</th></tr></thead><tbody id="gradeRows"></tbody></table>
     </div>
     <div class="subhead">Finish surcharge</div>
     <div class="table-wrap">
@@ -271,13 +271,12 @@
         <legend>Costs</legend>
         <div class="grid">
           <label><span>Material price (<span class="cur"></span>/kg)</span><input type="number" inputmode="decimal" id="matPrice" step="0.01" min="0"></label>
-          <label><span>Scrap value (<span class="cur"></span>/kg)</span><input type="number" inputmode="decimal" id="scrapPrice" step="0.01" min="0"></label>
           <label>Machine time (min)<input type="number" inputmode="decimal" id="machineMin" step="0.1" min="0" value="0"></label>
           <label>Labour time (min)<input type="number" inputmode="decimal" id="labourMin" step="0.1" min="0" value="0"></label>
           <label><span>Other costs (<span class="cur"></span>)</span><input type="number" inputmode="decimal" id="otherCost" step="0.01" min="0" value="0" placeholder="gas, consumables, delivery"></label>
           <label><span>Selling price / part (<span class="cur"></span>)</span><input type="number" inputmode="decimal" id="sellPrice" step="0.01" min="0" placeholder="optional"></label>
         </div>
-        <p class="note">Material and scrap prices fill in from Prices &amp; rates for the grade and finish. Change them here if this sheet cost something different.</p>
+        <p class="note">Material price fills in from Prices &amp; rates for the grade and finish. Change them here if this sheet cost something different.</p>
       </fieldset>
 
       <div class="preview" id="preview"></div>
@@ -339,7 +338,7 @@
     <div class="subhead">Sheet options <span class="muted" style="text-transform:none;letter-spacing:0;font-weight:400">(tap a row to choose)</span></div>
     <div class="table-wrap">
       <table>
-        <thead><tr><th></th><th class="l">Sheet</th><th>Parts / sheet</th><th>Sheets</th><th>Yield</th><th>Steel kg</th><th>Scrap kg</th><th>Net material</th><th>Material / part</th></tr></thead>
+        <thead><tr><th></th><th class="l">Sheet</th><th>Parts / sheet</th><th>Sheets</th><th>Yield</th><th>Steel kg</th><th>Scrap kg</th><th>Material</th><th>Material / part</th></tr></thead>
         <tbody id="quoteRows"></tbody>
       </table>
     </div>
@@ -434,24 +433,24 @@
 <script>
 (() => {
   const STORE_KEY = 'ss-sheet-yield-v1';
-  const SETTINGS_KEY = 'ss-sheet-yield-settings-v1';
+  const SETTINGS_KEY = 'ss-sheet-yield-settings-egp-v1';
   const GRADES = [['304', '304 / 304L'], ['316', '316 / 316L'], ['430', '430'], ['201', '201'], ['409', '409'], ['2205', '2205 Duplex'], ['other', 'Other']];
   const FINISHES = ['2B', 'BA', 'No.4 / Brushed', 'No.1 / HRAP', 'Mirror / No.8', 'Other'];
   const SHEET_SIZES = [[2000, 1000, ''], [2438, 1219, '8 × 4 ft'], [2500, 1250, ''], [3000, 1500, ''], [3048, 1524, '10 × 5 ft'], [4000, 2000, '']];
   // Example values only; users replace them with their own supplier prices and shop rates.
   const DEFAULT_SETTINGS = {
-    currency: '$', machineRate: 120, labourRate: 40, overheadPct: 15, marginPct: 25, offcutPct: 70,
+    currency: 'EGP', machineRateMin: 25, labourRateMin: 2.5, overheadPct: 15, marginPct: 25, offcutPct: 70,
     cutSpeed: 3000, pierceSec: 1.5, yieldGood: 80, yieldWarn: 65,
     grades: {
-      '304': { density: 7.93, price: 3.20, scrap: 1.00 },
-      '316': { density: 7.98, price: 4.80, scrap: 1.50 },
-      '430': { density: 7.70, price: 2.20, scrap: 0.40 },
-      '201': { density: 7.80, price: 2.40, scrap: 0.60 },
-      '409': { density: 7.70, price: 2.10, scrap: 0.40 },
-      '2205': { density: 7.80, price: 6.50, scrap: 1.60 },
-      'other': { density: 7.90, price: 3.00, scrap: 0.80 },
+      '304': { density: 7.93, price: 160 },
+      '316': { density: 7.98, price: 250 },
+      '430': { density: 7.70, price: 95 },
+      '201': { density: 7.80, price: 110 },
+      '409': { density: 7.70, price: 90 },
+      '2205': { density: 7.80, price: 350 },
+      'other': { density: 7.90, price: 150 },
     },
-    finishes: { '2B': 0, 'BA': 0.40, 'No.4 / Brushed': 0.30, 'No.1 / HRAP': -0.20, 'Mirror / No.8': 1.20, 'Other': 0 },
+    finishes: { '2B': 0, 'BA': 15, 'No.4 / Brushed': 12, 'No.1 / HRAP': -8, 'Mirror / No.8': 45, 'Other': 0 },
   };
   const clone = o => JSON.parse(JSON.stringify(o));
   function mergeSettings(saved) {
@@ -474,7 +473,11 @@
 
   const $ = id => document.getElementById(id);
   const fmt = (n, d = 1) => Number.isFinite(n) ? n.toLocaleString(undefined, { minimumFractionDigits: d, maximumFractionDigits: d }) : '–';
-  const money = (n, d = 2) => Number.isFinite(n) ? (n < 0 ? '−' : '') + settings.currency + fmt(Math.abs(n), d) : '–';
+  const money = (n, d = 2) => {
+    if (!Number.isFinite(n)) return '–';
+    const c = settings.currency, v = fmt(Math.abs(n), d), sign = n < 0 ? '−' : '';
+    return /^[A-Za-z]{2,}$/.test(c) ? `${sign}${v} ${c}` : `${sign}${c}${v}`;
+  };
   const num = id => parseFloat($(id).value);
   const fin = (x, dflt = 0) => Number.isFinite(x) ? x : dflt;
 
@@ -570,25 +573,25 @@
 
     // Costs. Entries carry the prices and rates they were saved with; older entries fall back to current settings.
     const matPrice = fin(e.matPrice, autoMatPrice(e.grade, e.finish));
-    const scrapPrice = fin(e.scrapPrice, gradeInfo(e.grade).scrap);
-    const machineRate = fin(e.machineRate, settings.machineRate), labourRate = fin(e.labourRate, settings.labourRate);
+    // Rates are per minute. Entries saved before the switch stored hourly rates (machineRate/labourRate).
+    const machineRateMin = fin(e.machineRateMin, Number.isFinite(e.machineRate) ? e.machineRate / 60 : settings.machineRateMin);
+    const labourRateMin = fin(e.labourRateMin, Number.isFinite(e.labourRate) ? e.labourRate / 60 : settings.labourRateMin);
     const overheadPct = fin(e.overheadPct, settings.overheadPct), offcutPct = fin(e.offcutPct, settings.offcutPct);
     const marginPct = fin(e.marginPct, settings.marginPct);
     const good = e.goodParts || 0;
     const materialCost = sheetKg * matPrice;
-    const scrapCredit = scrapKg * scrapPrice;
     const offcutCredit = offcut * matPrice * offcutPct / 100;
-    const netMaterial = materialCost - scrapCredit - offcutCredit;
-    const machineCost = fin(e.machineMin) / 60 * machineRate;
-    const labourCost = fin(e.labourMin) / 60 * labourRate;
+    const netMaterial = materialCost - offcutCredit;
+    const machineCost = fin(e.machineMin) * machineRateMin;
+    const labourCost = fin(e.labourMin) * labourRateMin;
     const otherCost = fin(e.otherCost);
     const directCost = netMaterial + machineCost + labourCost + otherCost;
     const overheadCost = directCost * overheadPct / 100;
     const totalCost = directCost + overheadCost;
     const costPerPart = good > 0 ? totalCost / good : NaN;
     const matPerPart = good > 0 ? netMaterial / good : NaN;
-    const scrapLoss = scrapKg * (matPrice - scrapPrice);
-    const rejectLoss = rejectKg * (matPrice - scrapPrice);
+    const scrapLoss = scrapKg * matPrice;
+    const rejectLoss = rejectKg * matPrice;
     const quotePerPart = marginPct < 100 ? costPerPart / (1 - marginPct / 100) : NaN;
     const revenue = e.sellPrice > 0 ? e.sellPrice * good : NaN;
     const profit = revenue - totalCost;
@@ -596,10 +599,10 @@
     // What the job would have saved if every part had been cut from the best-fit nest.
     const minSheets = perSheet > 0 ? Math.ceil((good + (e.rejects || 0)) / perSheet) : NaN;
     const extraSheets = Number.isFinite(minSheets) ? Math.max(0, e.sheets - minSheets) : 0;
-    const potentialSaving = e.sheets > 0 ? extraSheets * (sheetKg / e.sheets) * (matPrice - scrapPrice) : 0;
+    const potentialSaving = e.sheets > 0 ? extraSheets * (sheetKg / e.sheets) * matPrice : 0;
     return { ...e, partAreaUsed: partArea, sheetKg, partKg, rejectKg, scrapKg, yieldPct, effPct, plan, perSheet, nestPct,
-      matPrice, scrapPrice, machineRate, labourRate, overheadPct, offcutPct, marginPct,
-      materialCost, scrapCredit, offcutCredit, netMaterial, machineCost, labourCost, otherCost, directCost, overheadCost,
+      matPrice, machineRateMin, labourRateMin, overheadPct, offcutPct, marginPct,
+      materialCost, offcutCredit, netMaterial, machineCost, labourCost, otherCost, directCost, overheadCost,
       totalCost, costPerPart, matPerPart, scrapLoss, rejectLoss, quotePerPart, revenue, profit, marginAct,
       minSheets, extraSheets, potentialSaving };
   }
@@ -629,14 +632,13 @@
       margin: num('margin') || 0,
       notes: $('notes').value.trim(),
       matPrice: num('matPrice'),
-      scrapPrice: num('scrapPrice'),
       machineMin: num('machineMin') || 0,
       labourMin: num('labourMin') || 0,
       otherCost: num('otherCost') || 0,
       sellPrice: num('sellPrice') || 0,
       // Rates are snapshotted so later changes to Prices & rates don't rewrite past jobs.
       ...(editRates || {
-        machineRate: settings.machineRate, labourRate: settings.labourRate,
+        machineRateMin: settings.machineRateMin, labourRateMin: settings.labourRateMin,
         overheadPct: settings.overheadPct, offcutPct: settings.offcutPct, marginPct: settings.marginPct,
       }),
     };
@@ -647,7 +649,6 @@
     const g = $('grade').value, f = $('finish').value;
     $('density').value = gradeInfo(g).density;
     $('matPrice').value = +autoMatPrice(g, f).toFixed(2);
-    $('scrapPrice').value = gradeInfo(g).scrap;
   }
 
   function fillForm(e) {
@@ -657,7 +658,6 @@
     $('partArea').value = e.partArea || '';
     const c = compute(e);
     $('matPrice').value = +c.matPrice.toFixed(4);
-    $('scrapPrice').value = +c.scrapPrice.toFixed(4);
     for (const k of ['machineMin', 'labourMin', 'otherCost']) $(k).value = e[k] || 0;
     $('sellPrice').value = e.sellPrice || '';
     syncSheetPreset();
@@ -679,7 +679,7 @@
     const costOk = partOk && Number.isFinite(c.totalCost);
     const cs = [
       ['Material bought', money(c.materialCost)],
-      ['Scrap + offcut credit', money(c.scrapCredit + c.offcutCredit)],
+      ['Offcut credit', money(c.offcutCredit)],
       ['Net material', money(c.netMaterial)],
       ['Machine + labour', money(c.machineCost + c.labourCost)],
       ['Overhead', money(c.overheadCost)],
@@ -910,7 +910,7 @@
     const pL = num('qL'), pW = num('qW'), qty = Math.max(0, Math.floor(num('qQty') || 0));
     const area = num('qArea') > 0 ? num('qArea') : pL * pW;
     const kerf = num('qKerf') || 0, margin = num('qMargin') || 0;
-    const density = gradeInfo(g).density, price = autoMatPrice(g, f), scrap = gradeInfo(g).scrap;
+    const density = gradeInfo(g).density, price = autoMatPrice(g, f);
     const kgPerMm2 = t * density / 1e6;
     const sizes = SHEET_SIZES.map(([L, W, lab]) => ({ L, W, lab }));
     if (num('qCustL') > 0 && num('qCustW') > 0) sizes.push({ L: num('qCustL'), W: num('qCustW'), lab: 'custom' });
@@ -921,7 +921,7 @@
       const steelKg = sheets * sz.L * sz.W * kgPerMm2;
       const partKg = area * qty * kgPerMm2;
       const scrapKg = steelKg - partKg;
-      const netMat = steelKg * price - scrapKg * scrap;
+      const netMat = steelKg * price;
       return { ...sz, per, sheets, steelKg, scrapKg, netMat, y: sheets ? area * qty / (sheets * sz.L * sz.W) * 100 : NaN, matPerPart: qty ? netMat / qty : NaN };
     });
     const valid = options.filter(o => Number.isFinite(o.netMat) && o.per > 0);
@@ -935,15 +935,15 @@
     const setup = fin(num('qSetup')), other = fin(num('qOther'));
     let q = null;
     if (chosen) {
-      const machine = cutMin / 60 * settings.machineRate;
-      const labour = (cutMin + setup) / 60 * settings.labourRate;
+      const machine = cutMin * settings.machineRateMin;
+      const labour = (cutMin + setup) * settings.labourRateMin;
       const direct = chosen.netMat + machine + labour + other;
       const overhead = direct * settings.overheadPct / 100;
       const total = direct + overhead;
       const perPart = qty ? total / qty : NaN;
       const m = settings.marginPct;
       const pricePart = m < 100 ? perPart / (1 - m / 100) : NaN;
-      q = { chosen, machine, labour, direct, overhead, total, perPart, pricePart, priceTotal: pricePart * qty, cutMin, setup, other, perim, speed, price, scrap };
+      q = { chosen, machine, labour, direct, overhead, total, perPart, pricePart, priceTotal: pricePart * qty, cutMin, setup, other, perim, speed, price };
     }
     return { g, f, t, pL, pW, area, qty, kerf, margin, options, best, chosen, q };
   }
@@ -969,7 +969,7 @@
     }
     const k = [
       [`Sheets of ${fmt(q.chosen.L, 0)} × ${fmt(q.chosen.W, 0)}`, q.chosen.sheets],
-      ['Net material', money(q.chosen.netMat)],
+      ['Material', money(q.chosen.netMat)],
       ['Cutting time', `${fmt(q.cutMin, 0)} min`],
       ['Machine', money(q.machine)],
       ['Labour (incl. setup)', money(q.labour)],
@@ -981,7 +981,7 @@
     ];
     $('quoteKpis').innerHTML = k.map(([a, b]) => `<div class="kpi stat"><span class="k">${a}</span><span class="v">${b}</span></div>`).join('');
     const notes = [`Cut length ${fmt(q.perim, 0)} mm per part at ${fmt(q.speed, 0)} mm/min, ${fmt(settings.pierceSec, 1)} s per pierce.`,
-      `Material at ${money(q.price)}/kg with scrap credited at ${money(q.scrap)}/kg.`,
+      `Material at ${money(q.price)}/kg.`,
       'Leftover from the last sheet is counted as scrap; if you keep it as offcut the real cost is lower.'];
     $('quoteNote').textContent = notes.join(' ');
   }
@@ -993,7 +993,7 @@
     return [
       `Quote: ${r.qty} × ${fmt(r.pL, 0)} × ${fmt(r.pW, 0)} mm, ${gName} ${r.f}, ${fmt(r.t, 2)} mm`,
       `Material: ${q.chosen.sheets} sheet(s) ${fmt(q.chosen.L, 0)} × ${fmt(q.chosen.W, 0)} mm, ${q.chosen.per} parts/sheet, yield ${fmt(q.chosen.y)}%`,
-      `Net material: ${money(q.chosen.netMat)}`,
+      `Material: ${money(q.chosen.netMat)}`,
       `Cutting: ${fmt(q.cutMin, 0)} min machine ${money(q.machine)}, labour incl. ${fmt(q.setup, 0)} min setup ${money(q.labour)}`,
       q.other ? `Other: ${money(q.other)}` : null,
       `Overhead ${fmt(settings.overheadPct, 0)}%: ${money(q.overhead)}`,
@@ -1003,7 +1003,7 @@
   }
 
   // ---------- Settings UI ----------
-  const SETTING_FIELDS = { sCurrency: 'currency', sMachineRate: 'machineRate', sLabourRate: 'labourRate', sOverheadPct: 'overheadPct',
+  const SETTING_FIELDS = { sCurrency: 'currency', sMachineRate: 'machineRateMin', sLabourRate: 'labourRateMin', sOverheadPct: 'overheadPct',
     sMarginPct: 'marginPct', sOffcutPct: 'offcutPct', sCutSpeed: 'cutSpeed', sPierceSec: 'pierceSec', sYieldGood: 'yieldGood', sYieldWarn: 'yieldWarn' };
 
   function renderSettings() {
@@ -1012,8 +1012,7 @@
       const gi = settings.grades[g];
       return `<tr><td class="l">${esc(name)}</td>
         <td><input type="number" inputmode="decimal" step="0.01" min="0" id="gd-${g}" data-g="${g}" data-k="density" value="${gi.density}"></td>
-        <td><input type="number" inputmode="decimal" step="0.01" min="0" id="gp-${g}" data-g="${g}" data-k="price" value="${gi.price}"></td>
-        <td><input type="number" inputmode="decimal" step="0.01" min="0" id="gs-${g}" data-g="${g}" data-k="scrap" value="${gi.scrap}"></td></tr>`;
+        <td><input type="number" inputmode="decimal" step="0.01" min="0" id="gp-${g}" data-g="${g}" data-k="price" value="${gi.price}"></td></tr>`;
     }).join('');
     $('finishRows').innerHTML = FINISHES.map((f, i) => `<tr><td class="l">${esc(f)}</td>
       <td><input type="number" inputmode="decimal" step="0.01" id="fs-${i}" data-f="${esc(f)}" value="${settings.finishes[f]}"></td></tr>`).join('');
@@ -1179,7 +1178,7 @@
       fillForm(e);
       $('editId').value = e.id;
       const c = compute(e);
-      editRates = { machineRate: c.machineRate, labourRate: c.labourRate, overheadPct: c.overheadPct, offcutPct: c.offcutPct, marginPct: c.marginPct };
+      editRates = { machineRateMin: c.machineRateMin, labourRateMin: c.labourRateMin, overheadPct: c.overheadPct, offcutPct: c.offcutPct, marginPct: c.marginPct };
       $('formTitle').textContent = 'Edit entry';
       $('submitBtn').textContent = 'Update entry';
       $('cancelEdit').classList.remove('hidden');
@@ -1233,7 +1232,7 @@
   });
 
   $('exportCsv').addEventListener('click', () => {
-    const cols = ['date','job','part','operator','grade','finish','thickness','density','sheetL','sheetW','sheets','partL','partW','partAreaUsed','goodParts','rejects','offcut','kerf','margin','sheetKg','partKg','scrapKg','yieldPct','effPct','perSheet','nestPct','matPrice','scrapPrice','machineMin','labourMin','otherCost','sellPrice','materialCost','scrapCredit','offcutCredit','netMaterial','machineCost','labourCost','overheadCost','totalCost','costPerPart','quotePerPart','scrapLoss','revenue','profit','marginAct','potentialSaving','notes'];
+    const cols = ['date','job','part','operator','grade','finish','thickness','density','sheetL','sheetW','sheets','partL','partW','partAreaUsed','goodParts','rejects','offcut','kerf','margin','sheetKg','partKg','scrapKg','yieldPct','effPct','perSheet','nestPct','matPrice','machineMin','machineRateMin','labourMin','labourRateMin','otherCost','sellPrice','materialCost','offcutCredit','netMaterial','machineCost','labourCost','overheadCost','totalCost','costPerPart','quotePerPart','scrapLoss','revenue','profit','marginAct','potentialSaving','notes'];
     const cell = v => typeof v === 'number' ? (Number.isFinite(v) ? +v.toFixed(3) : '') : `"${String(v ?? '').replace(/"/g, '""')}"`;
     const csv = [cols.join(','), ...filtered().map(e => cols.map(c => cell(e[c])).join(','))].join('\n');
     showExport(`CSV of ${filtered().length} filtered entries`, `sheet-yield-${new Date().toISOString().slice(0, 10)}.csv`, csv, 'text/csv');
