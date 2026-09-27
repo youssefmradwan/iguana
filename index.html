@@ -2,7 +2,11 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Sheet Yield">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <title>Sheet Yield Tracker</title>
 <style>
   :root {
@@ -104,7 +108,25 @@
     cursor: pointer;
   }
   button.primary { background: var(--accent); color: var(--accent-text); border-color: var(--accent); font-weight: 600; }
-  button.link { border: none; background: none; color: var(--accent); padding: 2px 6px; }
+  button.link { border: none; background: none; color: var(--accent); padding: 8px 10px; min-height: 40px; }
+  input, select, button { min-height: 44px; font-size: 16px; }
+  textarea { font-size: 16px; }
+  button, th, #layout rect { -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+  .stepper { display: flex; align-items: stretch; }
+  .stepper input { border-radius: 0; text-align: center; min-width: 0; -moz-appearance: textfield; }
+  .stepper input::-webkit-inner-spin-button, .stepper input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+  .stepper button { flex: 0 0 44px; padding: 0; font-size: 20px; line-height: 1; }
+  .stepper button:first-child { border-radius: 6px 0 0 6px; border-right: none; }
+  .stepper button:last-child { border-radius: 0 6px 6px 0; border-left: none; }
+  #layout rect[data-i] { cursor: pointer; }
+  #layout rect.sel { stroke: var(--warn) !important; stroke-dasharray: none !important; opacity: .75; }
+  .slot-info { margin: 10px 0 0; font-size: .9rem; font-variant-numeric: tabular-nums; }
+  @media (min-width: 1000px) {
+    .workspace { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 18px; align-items: start; }
+    .workspace > section { margin-bottom: 18px; }
+    .workspace #layoutSection { position: sticky; top: calc(12px + env(safe-area-inset-top, 0px)); max-height: calc(100vh - 24px); overflow-y: auto; }
+    .workspace .grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
+  }
   button.link.danger { color: var(--bad); }
   .actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
   .preview {
@@ -157,6 +179,7 @@
   <h1>Stainless Steel Sheet Yield Tracker</h1>
   <p class="sub">Log sheets cut and parts produced, then see material yield, scrap weight and trends. Data is saved in this browser.</p>
 
+  <div class="workspace">
   <section>
     <h2 id="formTitle">New entry</h2>
     <form id="entryForm" autocomplete="off">
@@ -185,31 +208,31 @@
               <option value="other">Other</option>
             </select>
           </label>
-          <label>Density (g/cm³)<input type="number" id="density" step="0.01" min="0" required></label>
+          <label>Density (g/cm³)<input type="number" inputmode="decimal" id="density" step="0.01" min="0" required></label>
           <label>Finish
             <select id="finish">
               <option>2B</option><option>BA</option><option>No.4 / Brushed</option>
               <option>No.1 / HRAP</option><option>Mirror / No.8</option><option>Other</option>
             </select>
           </label>
-          <label>Thickness (mm)<input type="number" id="thickness" step="0.01" min="0" required></label>
-          <label>Sheet length (mm)<input type="number" id="sheetL" step="0.1" min="0" required value="2438"></label>
-          <label>Sheet width (mm)<input type="number" id="sheetW" step="0.1" min="0" required value="1219"></label>
-          <label>Sheets used<input type="number" id="sheets" step="1" min="1" required value="1"></label>
+          <label>Thickness (mm)<input type="number" inputmode="decimal" id="thickness" step="0.01" min="0" required></label>
+          <label>Sheet length (mm)<input type="number" inputmode="decimal" id="sheetL" step="0.1" min="0" required value="2438"></label>
+          <label>Sheet width (mm)<input type="number" inputmode="decimal" id="sheetW" step="0.1" min="0" required value="1219"></label>
+          <label>Sheets used<span class="stepper"><button type="button" data-step="-1" data-for="sheets" aria-label="Decrease">−</button><input type="number" inputmode="numeric" pattern="[0-9]*" id="sheets" step="1" min="1" required value="1"><button type="button" data-step="1" data-for="sheets" aria-label="Increase">+</button></span></label>
         </div>
       </fieldset>
 
       <fieldset>
         <legend>Parts</legend>
         <div class="grid">
-          <label>Part length (mm)<input type="number" id="partL" step="0.1" min="0"></label>
-          <label>Part width (mm)<input type="number" id="partW" step="0.1" min="0"></label>
-          <label>Net area / part (mm²)<input type="number" id="partArea" step="1" min="0" placeholder="optional, for non-rectangular parts"></label>
-          <label>Good parts produced<input type="number" id="goodParts" step="1" min="0" required></label>
-          <label>Rejected parts<input type="number" id="rejects" step="1" min="0" value="0"></label>
-          <label>Reusable offcut (kg)<input type="number" id="offcut" step="0.01" min="0" value="0"></label>
-          <label>Kerf / gap (mm)<input type="number" id="kerf" step="0.1" min="0" value="0"></label>
-          <label>Edge margin (mm)<input type="number" id="margin" step="0.1" min="0" value="0"></label>
+          <label>Part length (mm)<input type="number" inputmode="decimal" id="partL" step="0.1" min="0"></label>
+          <label>Part width (mm)<input type="number" inputmode="decimal" id="partW" step="0.1" min="0"></label>
+          <label>Net area / part (mm²)<input type="number" inputmode="decimal" id="partArea" step="1" min="0" placeholder="optional, for non-rectangular parts"></label>
+          <label>Good parts produced<span class="stepper"><button type="button" data-step="-1" data-for="goodParts" aria-label="Decrease">−</button><input type="number" inputmode="numeric" pattern="[0-9]*" id="goodParts" step="1" min="0" required><button type="button" data-step="1" data-for="goodParts" aria-label="Increase">+</button></span></label>
+          <label>Rejected parts<span class="stepper"><button type="button" data-step="-1" data-for="rejects" aria-label="Decrease">−</button><input type="number" inputmode="numeric" pattern="[0-9]*" id="rejects" step="1" min="0" value="0"><button type="button" data-step="1" data-for="rejects" aria-label="Increase">+</button></span></label>
+          <label>Reusable offcut (kg)<input type="number" inputmode="decimal" id="offcut" step="0.01" min="0" value="0"></label>
+          <label>Kerf / gap (mm)<input type="number" inputmode="decimal" id="kerf" step="0.1" min="0" value="0"></label>
+          <label>Edge margin (mm)<input type="number" inputmode="decimal" id="margin" step="0.1" min="0" value="0"></label>
         </div>
         <label style="margin-top:12px">Notes<textarea id="notes" rows="2"></textarea></label>
       </fieldset>
@@ -244,8 +267,10 @@
       <span><i style="background:var(--sheet);border:1px solid var(--border)"></i>Offcut / scrap</span>
     </div>
     <div class="layout-info" id="layoutInfo"></div>
+    <p class="slot-info" id="slotInfo">Tap a part on the sheet to see its size and position.</p>
     <p class="note" id="layoutNote"></p>
   </section>
+  </div>
 
   <section>
     <h2>Summary</h2>
@@ -459,7 +484,7 @@
     if (!layoutEntryId) { clearTimeout(layoutTimer); layoutTimer = setTimeout(renderLayout, 120); }
   }
 
-  let layoutEntryId = null, layoutSheet = 0, layoutTimer;
+  let layoutEntryId = null, layoutSheet = 0, layoutTimer, layoutState = null;
 
   function renderLayout() {
     let src = layoutEntryId ? entries.find(x => x.id === layoutEntryId) : null;
@@ -468,7 +493,7 @@
     const e = compute(src);
     $('layoutTitle').textContent = layoutEntryId
       ? `Saved entry: ${[e.date, e.job, e.part].filter(Boolean).join(' · ')}`
-      : 'Live preview of the form above';
+      : 'Live preview of the entry form';
     $('layoutBack').classList.toggle('hidden', !layoutEntryId);
     const plan = e.plan;
     if (!plan) {
@@ -494,7 +519,7 @@
       const kind = i < good ? 'good' : i < good + rej ? 'rej' : 'empty';
       const fill = kind === 'good' ? 'var(--part)' : kind === 'rej' ? 'var(--reject)' : 'none';
       const stroke = kind === 'empty' ? `stroke="var(--muted)" stroke-dasharray="${fs / 3} ${fs / 4}"` : 'stroke="var(--panel)"';
-      svg += `<rect x="${r.x}" y="${r.y}" width="${r.w}" height="${r.h}" fill="${fill}" ${stroke} stroke-width="${fs / 14}"><title>Slot ${i + 1}: ${fmt(r.w, 1)} × ${fmt(r.h, 1)} mm at (${fmt(r.x, 1)}, ${fmt(r.y, 1)})${kind === 'good' ? '' : kind === 'rej' ? ' (rejected)' : ' (unused)'}</title></rect>`;
+      svg += `<rect data-i="${i}" x="${r.x}" y="${r.y}" width="${r.w}" height="${r.h}" fill="${fill}" ${stroke} stroke-width="${fs / 14}"><title>Slot ${i + 1}: ${fmt(r.w, 1)} × ${fmt(r.h, 1)} mm at (${fmt(r.x, 1)}, ${fmt(r.y, 1)})${kind === 'good' ? '' : kind === 'rej' ? ' (rejected)' : ' (unused)'}</title></rect>`;
       const lf = Math.min(fs * 0.8, r.w / 3, r.h / 1.6);
       if (labels && lf > fs * 0.25)
         svg += `<text x="${r.x + r.w / 2}" y="${r.y + r.h / 2}" font-size="${lf}" text-anchor="middle" dominant-baseline="central" fill="${kind === 'empty' ? 'var(--muted)' : 'var(--accent-text)'}" pointer-events="none">${start + i + 1}</text>`;
@@ -503,6 +528,8 @@
     svg += `<text x="${-fs * 0.7}" y="${SW / 2}" font-size="${fs}" text-anchor="middle" fill="var(--muted)" transform="rotate(-90 ${-fs * 0.7} ${SW / 2})">${fmt(SW, 0)} mm</text>`;
     svg += '</svg>';
     $('layout').innerHTML = svg;
+    $('slotInfo').textContent = 'Tap a part on the sheet to see its size and position.';
+    layoutState = { rects: plan.rects, good, rej, start };
 
     $('sheetNav').innerHTML = sheets > 1
       ? `<button type="button" data-sheet="-1" ${layoutSheet === 0 ? 'disabled' : ''}>‹</button><span>Sheet ${layoutSheet + 1} of ${sheets}</span><button type="button" data-sheet="1" ${layoutSheet === sheets - 1 ? 'disabled' : ''}>›</button>`
@@ -644,6 +671,20 @@
   $('entryForm').addEventListener('input', updatePreview);
   $('resetBtn').addEventListener('click', resetForm);
   $('cancelEdit').addEventListener('click', resetForm);
+  $('layout').addEventListener('click', ev => {
+    const el = ev.target.closest('rect[data-i]');
+    if (!el || !layoutState) return;
+    document.querySelectorAll('#layout rect.sel').forEach(x => x.classList.remove('sel'));
+    el.classList.add('sel');
+    const i = Number(el.dataset.i), r = layoutState.rects[i];
+    const status = i < layoutState.good ? 'good part' : i < layoutState.good + layoutState.rej ? 'rejected part' : 'unused slot';
+    $('slotInfo').textContent = `Part ${layoutState.start + i + 1} (${status}): ${fmt(r.w, 1)} × ${fmt(r.h, 1)} mm, corner at ${fmt(r.x, 1)} mm along length, ${fmt(r.y, 1)} mm along width.`;
+  });
+  document.querySelectorAll('.stepper button').forEach(b => b.addEventListener('click', () => {
+    const inp = $(b.dataset.for), min = Number(inp.min || 0);
+    inp.value = Math.max(min, (parseInt(inp.value, 10) || 0) + Number(b.dataset.step));
+    inp.dispatchEvent(new Event('input', { bubbles: true }));
+  }));
   $('layoutBack').addEventListener('click', () => { layoutEntryId = null; layoutSheet = 0; renderLayout(); });
   $('sheetNav').addEventListener('click', ev => {
     const d = Number(ev.target.dataset.sheet);
