@@ -18,6 +18,9 @@
     --bad: #b3261e;
     --bar: #2f6fb0;
     --grid: #e6e9ef;
+    --sheet: #dde2e8;
+    --part: #2f6fb0;
+    --reject: #b3261e;
   }
   @media (prefers-color-scheme: dark) {
     :root:not([data-theme="light"]) {
@@ -33,6 +36,9 @@
       --bad: #f07268;
       --bar: #5b9bd8;
       --grid: #2a3039;
+      --sheet: #2c323b;
+      --part: #5b9bd8;
+      --reject: #f07268;
     }
   }
   :root[data-theme="dark"] {
@@ -48,6 +54,9 @@
     --bad: #f07268;
     --bar: #5b9bd8;
     --grid: #2a3039;
+    --sheet: #2c323b;
+    --part: #5b9bd8;
+    --reject: #f07268;
   }
   * { box-sizing: border-box; }
   body {
@@ -129,6 +138,13 @@
   #chart text { fill: var(--muted); font-size: 11px; }
   .note { font-size: .8rem; color: var(--muted); margin-top: 8px; }
   .hidden { display: none; }
+  #layout svg { width: 100%; height: auto; max-height: 70vh; display: block; }
+  .layout-head { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+  .layout-head .muted { color: var(--muted); font-size: .9rem; }
+  .legend { display: flex; flex-wrap: wrap; gap: 14px; font-size: .82rem; color: var(--muted); margin-top: 10px; }
+  .legend i { display: inline-block; width: 12px; height: 12px; border-radius: 2px; vertical-align: -1px; margin-right: 5px; }
+  .sheet-nav { display: flex; gap: 6px; align-items: center; }
+  .layout-info { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; margin-top: 12px; }
 </style>
 </head>
 <body>
@@ -188,6 +204,7 @@
           <label>Rejected parts<input type="number" id="rejects" step="1" min="0" value="0"></label>
           <label>Reusable offcut (kg)<input type="number" id="offcut" step="0.01" min="0" value="0"></label>
           <label>Kerf / gap (mm)<input type="number" id="kerf" step="0.1" min="0" value="0"></label>
+          <label>Edge margin (mm)<input type="number" id="margin" step="0.1" min="0" value="0"></label>
         </div>
         <label style="margin-top:12px">Notes<textarea id="notes" rows="2"></textarea></label>
       </fieldset>
@@ -199,8 +216,30 @@
         <button type="button" id="cancelEdit" class="hidden">Cancel edit</button>
         <button type="button" id="resetBtn">Clear</button>
       </div>
-      <p class="note">Yield = net area of good parts ÷ total sheet area. If "Net area / part" is blank, part length × width is used. Best-fit nest shows how many rectangular parts would fit on one sheet (grid layout, either orientation) for comparison.</p>
+      <p class="note">Yield = net area of good parts ÷ total sheet area. If "Net area / part" is blank, part length × width is used. Best-fit nest shows how many rectangular parts fit on one sheet, mixing orientations to fill leftover strips; see the layout below.</p>
     </form>
+  </section>
+
+  <section id="layoutSection">
+    <div class="layout-head">
+      <div>
+        <h2 style="margin:0">Sheet layout</h2>
+        <span class="muted" id="layoutTitle"></span>
+      </div>
+      <div class="actions">
+        <div class="sheet-nav" id="sheetNav"></div>
+        <button type="button" id="layoutBack" class="hidden">Back to form preview</button>
+      </div>
+    </div>
+    <div id="layout"></div>
+    <div class="legend">
+      <span><i style="background:var(--part)"></i>Good part</span>
+      <span><i style="background:var(--reject)"></i>Rejected part</span>
+      <span><i style="border:1px dashed var(--muted)"></i>Unused slot</span>
+      <span><i style="background:var(--sheet);border:1px solid var(--border)"></i>Offcut / scrap</span>
+    </div>
+    <div class="layout-info" id="layoutInfo"></div>
+    <p class="note" id="layoutNote"></p>
   </section>
 
   <section>
@@ -272,11 +311,43 @@
     try { localStorage.setItem(STORE_KEY, JSON.stringify(entries)); } catch { alert('Could not save to browser storage. Export a backup to keep your data.'); }
   }
 
-  // Max rectangular parts per sheet using a simple grid in either orientation.
-  function nestCount(SL, SW, pL, pW, kerf) {
-    if (!(pL > 0 && pW > 0)) return NaN;
-    const fit = (a, b) => Math.floor((a + kerf) / (b + kerf));
-    return Math.max(fit(SL, pL) * fit(SW, pW), fit(SL, pW) * fit(SW, pL));
+  // Guillotine nest of identical rectangles: place a grid, then recursively fill the
+  // leftover right and bottom strips, trying both part orientations and both split directions.
+  function nestPlan(SL, SW, pL, pW, kerf, margin) {
+    const W = SL - 2 * margin, H = SW - 2 * margin, k = kerf;
+    if (!(pL > 0 && pW > 0 && W > 0 && H > 0)) return null;
+    const fit = (len, p) => len + 1e-6 >= p ? Math.floor((len + k + 1e-6) / (p + k)) : 0;
+    const orients = pL === pW ? [[pL, pW]] : [[pL, pW], [pW, pL]];
+    const memo = new Map();
+    function plan(w, h, d) {
+      const key = `${w.toFixed(2)}x${h.toFixed(2)}@${d}`;
+      if (memo.has(key)) return memo.get(key);
+      let best = { n: 0 };
+      if (d < 4) for (const [a, b] of orients) {
+        const nx = fit(w, a), ny = fit(h, b);
+        if (!nx || !ny) continue;
+        const uw = nx * (a + k), uh = ny * (b + k);
+        for (const split of ['A', 'B']) {
+          // A: right strip full height + bottom strip under grid. B: bottom strip full width + right strip beside grid.
+          const pr = plan(w - uw, split === 'A' ? h : uh, d + 1);
+          const pb = plan(split === 'A' ? uw : w, h - uh, d + 1);
+          const n = nx * ny + pr.n + pb.n;
+          if (n > best.n) best = { n, a, b, nx, ny, uw, uh, pr, pb };
+        }
+      }
+      memo.set(key, best);
+      return best;
+    }
+    const root = plan(W, H, 0);
+    const rects = [];
+    (function build(p, x, y) {
+      if (!p.n) return;
+      for (let j = 0; j < p.ny; j++)
+        for (let i = 0; i < p.nx; i++) rects.push({ x: x + i * (p.a + k), y: y + j * (p.b + k), w: p.a, h: p.b });
+      build(p.pr, x + p.uw, y);
+      build(p.pb, x, y + p.uh);
+    })(root, margin, margin);
+    return { n: root.n, rects };
   }
 
   function compute(e) {
@@ -291,9 +362,10 @@
     const scrapKg = Math.max(0, sheetKg - partKg - offcut);
     const yieldPct = totalArea > 0 ? (partArea * e.goodParts) / totalArea * 100 : NaN;
     const effPct = sheetKg > 0 ? (partKg + offcut) / sheetKg * 100 : NaN;
-    const perSheet = nestCount(e.sheetL, e.sheetW, e.partL, e.partW, e.kerf || 0);
+    const plan = nestPlan(e.sheetL, e.sheetW, e.partL, e.partW, e.kerf || 0, e.margin || 0);
+    const perSheet = plan ? plan.n : NaN;
     const nestPct = perSheet > 0 ? perSheet * partArea / sheetArea * 100 : NaN;
-    return { ...e, partAreaUsed: partArea, sheetKg, partKg, rejectKg, scrapKg, yieldPct, effPct, perSheet, nestPct };
+    return { ...e, partAreaUsed: partArea, sheetKg, partKg, rejectKg, scrapKg, yieldPct, effPct, plan, perSheet, nestPct };
   }
 
   function yieldClass(p) { return !Number.isFinite(p) ? '' : p >= 80 ? 'good' : p >= 65 ? 'warn' : 'bad'; }
@@ -318,12 +390,13 @@
       rejects: num('rejects') || 0,
       offcut: num('offcut') || 0,
       kerf: num('kerf') || 0,
+      margin: num('margin') || 0,
       notes: $('notes').value.trim(),
     };
   }
 
   function fillForm(e) {
-    for (const k of ['date','job','part','operator','grade','density','finish','thickness','sheetL','sheetW','sheets','goodParts','rejects','offcut','kerf','notes']) $(k).value = e[k] ?? '';
+    for (const k of ['date','job','part','operator','grade','density','finish','thickness','sheetL','sheetW','sheets','goodParts','rejects','offcut','kerf','margin','notes']) $(k).value = e[k] ?? '';
     $('partL').value = e.partL || '';
     $('partW').value = e.partW || '';
     $('partArea').value = e.partArea || '';
@@ -342,6 +415,75 @@
       ['Best-fit nest', Number.isFinite(c.perSheet) ? `${c.perSheet} / sheet (${fmt(c.nestPct)}%)` : '–'],
     ];
     $('preview').innerHTML = stats.map(([k, v]) => `<div class="stat"><span class="k">${k}</span><span class="v">${v}</span></div>`).join('');
+    if (!layoutEntryId) { clearTimeout(layoutTimer); layoutTimer = setTimeout(renderLayout, 120); }
+  }
+
+  let layoutEntryId = null, layoutSheet = 0, layoutTimer;
+
+  function renderLayout() {
+    let src = layoutEntryId ? entries.find(x => x.id === layoutEntryId) : null;
+    if (layoutEntryId && !src) layoutEntryId = null;
+    if (!src) src = readForm();
+    const e = compute(src);
+    $('layoutTitle').textContent = layoutEntryId
+      ? `Saved entry: ${[e.date, e.job, e.part].filter(Boolean).join(' · ')}`
+      : 'Live preview of the form above';
+    $('layoutBack').classList.toggle('hidden', !layoutEntryId);
+    const plan = e.plan;
+    if (!plan) {
+      $('layout').innerHTML = '<p class="empty">Enter sheet size and part length × width to see the layout.</p>';
+      $('layoutInfo').innerHTML = $('sheetNav').innerHTML = $('layoutNote').textContent = '';
+      return;
+    }
+
+    const sheets = Math.max(1, Math.floor(e.sheets || 1));
+    layoutSheet = Math.max(0, Math.min(layoutSheet, sheets - 1));
+    // Produced parts fill sheets in order: good parts first, then rejects.
+    const cap = plan.n, G = e.goodParts || 0, R = e.rejects || 0, start = layoutSheet * cap;
+    const clamp = v => Math.max(0, Math.min(cap, v));
+    const good = clamp(G - start), rej = clamp(G + R - start) - good;
+
+    const SL = e.sheetL, SW = e.sheetW, m = e.margin || 0;
+    const fs = Math.max(SL, SW) / 45, pad = fs * 2.2;
+    const labels = cap <= 400;
+    let svg = `<svg viewBox="${-pad} ${-pad} ${SL + pad * 1.4} ${SW + pad * 1.4}" role="img" aria-label="Part layout on sheet">`;
+    svg += `<rect x="0" y="0" width="${SL}" height="${SW}" fill="var(--sheet)" stroke="var(--muted)" stroke-width="${fs / 8}"/>`;
+    if (m > 0) svg += `<rect x="${m}" y="${m}" width="${SL - 2 * m}" height="${SW - 2 * m}" fill="none" stroke="var(--muted)" stroke-width="${fs / 12}" stroke-dasharray="${fs / 2} ${fs / 3}"/>`;
+    plan.rects.forEach((r, i) => {
+      const kind = i < good ? 'good' : i < good + rej ? 'rej' : 'empty';
+      const fill = kind === 'good' ? 'var(--part)' : kind === 'rej' ? 'var(--reject)' : 'none';
+      const stroke = kind === 'empty' ? `stroke="var(--muted)" stroke-dasharray="${fs / 3} ${fs / 4}"` : 'stroke="var(--panel)"';
+      svg += `<rect x="${r.x}" y="${r.y}" width="${r.w}" height="${r.h}" fill="${fill}" ${stroke} stroke-width="${fs / 14}"><title>Slot ${i + 1}: ${fmt(r.w, 1)} × ${fmt(r.h, 1)} mm at (${fmt(r.x, 1)}, ${fmt(r.y, 1)})${kind === 'good' ? '' : kind === 'rej' ? ' (rejected)' : ' (unused)'}</title></rect>`;
+      const lf = Math.min(fs * 0.8, r.w / 3, r.h / 1.6);
+      if (labels && lf > fs * 0.25)
+        svg += `<text x="${r.x + r.w / 2}" y="${r.y + r.h / 2}" font-size="${lf}" text-anchor="middle" dominant-baseline="central" fill="${kind === 'empty' ? 'var(--muted)' : 'var(--accent-text)'}" pointer-events="none">${start + i + 1}</text>`;
+    });
+    svg += `<text x="${SL / 2}" y="${-fs * 0.7}" font-size="${fs}" text-anchor="middle" fill="var(--muted)">${fmt(SL, 0)} mm</text>`;
+    svg += `<text x="${-fs * 0.7}" y="${SW / 2}" font-size="${fs}" text-anchor="middle" fill="var(--muted)" transform="rotate(-90 ${-fs * 0.7} ${SW / 2})">${fmt(SW, 0)} mm</text>`;
+    svg += '</svg>';
+    $('layout').innerHTML = svg;
+
+    $('sheetNav').innerHTML = sheets > 1
+      ? `<button type="button" data-sheet="-1" ${layoutSheet === 0 ? 'disabled' : ''}>‹</button><span>Sheet ${layoutSheet + 1} of ${sheets}</span><button type="button" data-sheet="1" ${layoutSheet === sheets - 1 ? 'disabled' : ''}>›</button>`
+      : '';
+
+    const sheetArea = SL * SW, partArea = e.partAreaUsed;
+    const onSheetPct = (good * partArea) / sheetArea * 100;
+    const info = [
+      ['Parts per sheet', cap],
+      ['Layout utilisation', fmt(e.nestPct) + '%'],
+      ['This sheet: good', good],
+      ['This sheet: rejected', rej],
+      ['This sheet: unused slots', cap - good - rej],
+      ['This sheet: yield', `<span class="${yieldClass(onSheetPct)}">${fmt(onSheetPct)}%</span>`],
+    ];
+    $('layoutInfo').innerHTML = info.map(([k, v]) => `<div class="stat"><span class="k">${k}</span><span class="v">${v}</span></div>`).join('');
+
+    const notes = [];
+    if (e.partArea > 0) notes.push('Parts are drawn as their length × width bounding rectangle; yield uses the net area you entered.');
+    if (G + R > cap * sheets) notes.push(`${G + R - cap * sheets} more part(s) were produced than this layout fits on ${sheets} sheet(s), so the actual nest was tighter than this rectangular layout.`);
+    notes.push('Layout is a computed guillotine nest (grid plus leftover strips, both orientations), not your CAM program\'s exact nest.');
+    $('layoutNote').textContent = notes.join(' ');
   }
 
   function filtered() {
@@ -387,7 +529,7 @@
         <td>${fmt(e.scrapKg, 1)}</td>
         <td class="${yieldClass(e.yieldPct)}"><strong>${fmt(e.yieldPct)}%</strong></td>
         <td>${Number.isFinite(e.nestPct) ? fmt(e.nestPct) + '%' : '–'}</td>
-        <td class="l"><button class="link" data-edit="${e.id}">Edit</button><button class="link danger" data-del="${e.id}">Delete</button></td>
+        <td class="l"><button class="link" data-layout="${e.id}">Layout</button><button class="link" data-edit="${e.id}">Edit</button><button class="link danger" data-del="${e.id}">Delete</button></td>
       </tr>`).join('') : `<tr><td colspan="13" class="empty">No entries yet. Add one above.</td></tr>`;
     document.querySelectorAll('th[data-k]').forEach(th => {
       th.textContent = th.textContent.replace(/ [▲▼]$/, '') + (th.dataset.k === sort.k ? (sort.dir > 0 ? ' ▲' : ' ▼') : '');
@@ -442,6 +584,7 @@
     renderTable(list);
     renderKpis(list);
     renderChart(list);
+    if (layoutEntryId) renderLayout();
   }
 
   function resetForm() {
@@ -460,6 +603,11 @@
   $('entryForm').addEventListener('input', updatePreview);
   $('resetBtn').addEventListener('click', resetForm);
   $('cancelEdit').addEventListener('click', resetForm);
+  $('layoutBack').addEventListener('click', () => { layoutEntryId = null; layoutSheet = 0; renderLayout(); });
+  $('sheetNav').addEventListener('click', ev => {
+    const d = Number(ev.target.dataset.sheet);
+    if (d) { layoutSheet += d; renderLayout(); }
+  });
 
   $('entryForm').addEventListener('submit', ev => {
     ev.preventDefault();
@@ -478,8 +626,13 @@
   });
 
   $('rows').addEventListener('click', ev => {
-    const edit = ev.target.dataset.edit, del = ev.target.dataset.del;
-    if (edit) {
+    const edit = ev.target.dataset.edit, del = ev.target.dataset.del, lay = ev.target.dataset.layout;
+    if (lay) {
+      layoutEntryId = Number(lay);
+      layoutSheet = 0;
+      renderLayout();
+      $('layoutSection').scrollIntoView({ behavior: 'smooth' });
+    } else if (edit) {
       const e = entries.find(x => String(x.id) === edit);
       if (!e) return;
       fillForm(e);
@@ -511,7 +664,7 @@
   }
 
   $('exportCsv').addEventListener('click', () => {
-    const cols = ['date','job','part','operator','grade','finish','thickness','density','sheetL','sheetW','sheets','partL','partW','partAreaUsed','goodParts','rejects','offcut','kerf','sheetKg','partKg','scrapKg','yieldPct','effPct','perSheet','nestPct','notes'];
+    const cols = ['date','job','part','operator','grade','finish','thickness','density','sheetL','sheetW','sheets','partL','partW','partAreaUsed','goodParts','rejects','offcut','kerf','margin','sheetKg','partKg','scrapKg','yieldPct','effPct','perSheet','nestPct','notes'];
     const cell = v => typeof v === 'number' ? (Number.isFinite(v) ? +v.toFixed(3) : '') : `"${String(v ?? '').replace(/"/g, '""')}"`;
     const csv = [cols.join(','), ...filtered().map(e => cols.map(c => cell(e[c])).join(','))].join('\n');
     download(`sheet-yield-${new Date().toISOString().slice(0, 10)}.csv`, csv, 'text/csv');
