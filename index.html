@@ -73,7 +73,7 @@
   h1 { font-size: 1.5rem; margin: 0 0 4px; }
   h2 { font-size: 1.1rem; margin: 0 0 12px; }
   p.sub { margin: 0 0 20px; color: var(--muted); }
-  section {
+  section, details.panel {
     background: var(--panel);
     border: 1px solid var(--border);
     border-radius: 10px;
@@ -171,13 +171,53 @@
   .legend { display: flex; flex-wrap: wrap; gap: 14px; font-size: .82rem; color: var(--muted); margin-top: 10px; }
   .legend i { display: inline-block; width: 12px; height: 12px; border-radius: 2px; vertical-align: -1px; margin-right: 5px; }
   .sheet-nav { display: flex; gap: 6px; align-items: center; }
+  details.panel > summary { cursor: pointer; font-weight: 600; font-size: 1.1rem; list-style: none; display: flex; justify-content: space-between; align-items: center; min-height: 32px; }
+  details.panel > summary::-webkit-details-marker { display: none; }
+  details.panel > summary::after { content: "Show"; font-size: .85rem; font-weight: 500; color: var(--accent); }
+  details.panel[open] > summary::after { content: "Hide"; }
+  details.panel[open] > summary { margin-bottom: 12px; }
+  .subhead { font-size: .9rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; margin: 18px 0 8px; }
+  table.compact input { min-height: 38px; padding: 5px 7px; text-align: right; max-width: 110px; }
+  table.compact td, table.compact th { padding: 5px 6px; }
+  tr.best td { background: color-mix(in srgb, var(--good) 12%, transparent); }
+  tr.pick { cursor: pointer; }
+  tr.pick input[type=radio] { min-height: 0; width: 20px; height: 20px; margin: 0; }
+  .muted { color: var(--muted); }
+  .money-neg { color: var(--bad); }
+  .money-pos { color: var(--good); }
   .layout-info { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; margin-top: 12px; }
 </style>
 </head>
 <body>
 <main>
   <h1>Stainless Steel Sheet Yield Tracker</h1>
-  <p class="sub">Log sheets cut and parts produced, then see material yield, scrap weight and trends. Data is saved in this browser.</p>
+  <p class="sub">Log sheets cut and parts produced, then see yield, scrap, job cost and part layout. Quote new jobs and pick the cheapest sheet size. Data is saved in this browser.</p>
+
+  <details class="panel" id="settingsPanel">
+    <summary>Prices &amp; rates</summary>
+    <p class="note" style="margin-top:0">These are used for new entries and quotes. Saved entries keep the prices and rates they were saved with. The starting values are examples only; replace them with your supplier prices and shop rates.</p>
+    <div class="grid">
+      <label>Currency symbol<input type="text" id="sCurrency" maxlength="4"></label>
+      <label><span>Machine rate (<span class="cur"></span>/hr)</span><input type="number" inputmode="decimal" id="sMachineRate" step="0.01" min="0"></label>
+      <label><span>Labour rate (<span class="cur"></span>/hr)</span><input type="number" inputmode="decimal" id="sLabourRate" step="0.01" min="0"></label>
+      <label>Overhead (% of direct cost)<input type="number" inputmode="decimal" id="sOverheadPct" step="0.1" min="0"></label>
+      <label>Target margin (% of price)<input type="number" inputmode="decimal" id="sMarginPct" step="0.1" min="0" max="95"></label>
+      <label>Offcut value (% of material price)<input type="number" inputmode="decimal" id="sOffcutPct" step="1" min="0" max="100"></label>
+      <label>Cutting speed (mm/min)<input type="number" inputmode="decimal" id="sCutSpeed" step="10" min="1"></label>
+      <label>Pierce time (seconds)<input type="number" inputmode="decimal" id="sPierceSec" step="0.1" min="0"></label>
+      <label>Good yield from (%)<input type="number" inputmode="decimal" id="sYieldGood" step="1" min="0" max="100"></label>
+      <label>Warning yield from (%)<input type="number" inputmode="decimal" id="sYieldWarn" step="1" min="0" max="100"></label>
+    </div>
+    <div class="subhead">Grades</div>
+    <div class="table-wrap">
+      <table class="compact"><thead><tr><th>Grade</th><th>Density (g/cm³)</th><th>Price (<span class="cur"></span>/kg)</th><th>Scrap value (<span class="cur"></span>/kg)</th></tr></thead><tbody id="gradeRows"></tbody></table>
+    </div>
+    <div class="subhead">Finish surcharge</div>
+    <div class="table-wrap">
+      <table class="compact"><thead><tr><th>Finish</th><th>Extra (<span class="cur"></span>/kg)</th></tr></thead><tbody id="finishRows"></tbody></table>
+    </div>
+    <div class="actions" style="margin-top:12px"><button type="button" id="resetSettings" class="link danger">Reset to example values</button></div>
+  </details>
 
   <div class="workspace">
   <section>
@@ -198,24 +238,14 @@
         <legend>Sheet</legend>
         <div class="grid">
           <label>Grade
-            <select id="grade">
-              <option value="304">304 / 304L</option>
-              <option value="316">316 / 316L</option>
-              <option value="430">430</option>
-              <option value="201">201</option>
-              <option value="409">409</option>
-              <option value="2205">2205 Duplex</option>
-              <option value="other">Other</option>
-            </select>
+            <select id="grade" class="grade-select"></select>
           </label>
           <label>Density (g/cm³)<input type="number" inputmode="decimal" id="density" step="0.01" min="0" required></label>
           <label>Finish
-            <select id="finish">
-              <option>2B</option><option>BA</option><option>No.4 / Brushed</option>
-              <option>No.1 / HRAP</option><option>Mirror / No.8</option><option>Other</option>
-            </select>
+            <select id="finish" class="finish-select"></select>
           </label>
-          <label>Thickness (mm)<input type="number" inputmode="decimal" id="thickness" step="0.01" min="0" required></label>
+          <label>Thickness (mm)<input type="number" inputmode="decimal" id="thickness" list="thicknessList" step="0.01" min="0" required></label>
+          <label>Sheet size<select id="sheetPreset" class="sheet-select"></select></label>
           <label>Sheet length (mm)<input type="number" inputmode="decimal" id="sheetL" step="0.1" min="0" required value="2438"></label>
           <label>Sheet width (mm)<input type="number" inputmode="decimal" id="sheetW" step="0.1" min="0" required value="1219"></label>
           <label>Sheets used<span class="stepper"><button type="button" data-step="-1" data-for="sheets" aria-label="Decrease">−</button><input type="number" inputmode="numeric" pattern="[0-9]*" id="sheets" step="1" min="1" required value="1"><button type="button" data-step="1" data-for="sheets" aria-label="Increase">+</button></span></label>
@@ -237,7 +267,21 @@
         <label style="margin-top:12px">Notes<textarea id="notes" rows="2"></textarea></label>
       </fieldset>
 
+      <fieldset>
+        <legend>Costs</legend>
+        <div class="grid">
+          <label><span>Material price (<span class="cur"></span>/kg)</span><input type="number" inputmode="decimal" id="matPrice" step="0.01" min="0"></label>
+          <label><span>Scrap value (<span class="cur"></span>/kg)</span><input type="number" inputmode="decimal" id="scrapPrice" step="0.01" min="0"></label>
+          <label>Machine time (min)<input type="number" inputmode="decimal" id="machineMin" step="0.1" min="0" value="0"></label>
+          <label>Labour time (min)<input type="number" inputmode="decimal" id="labourMin" step="0.1" min="0" value="0"></label>
+          <label><span>Other costs (<span class="cur"></span>)</span><input type="number" inputmode="decimal" id="otherCost" step="0.01" min="0" value="0" placeholder="gas, consumables, delivery"></label>
+          <label><span>Selling price / part (<span class="cur"></span>)</span><input type="number" inputmode="decimal" id="sellPrice" step="0.01" min="0" placeholder="optional"></label>
+        </div>
+        <p class="note">Material and scrap prices fill in from Prices &amp; rates for the grade and finish. Change them here if this sheet cost something different.</p>
+      </fieldset>
+
       <div class="preview" id="preview"></div>
+      <div class="preview" id="costPreview"></div>
 
       <div class="actions">
         <button type="submit" class="primary" id="submitBtn">Save entry</button>
@@ -272,6 +316,42 @@
   </section>
   </div>
 
+  <section id="quoteSection">
+    <h2>Job quote &amp; sheet planner</h2>
+    <p class="note" style="margin-top:-6px">Price a job before cutting. Compares standard sheet sizes and estimates cutting time and cost using Prices &amp; rates.</p>
+    <div class="grid">
+      <label>Grade<select id="qGrade" class="grade-select"></select></label>
+      <label>Finish<select id="qFinish" class="finish-select"></select></label>
+      <label>Thickness (mm)<input type="number" inputmode="decimal" id="qThick" list="thicknessList" step="0.01" min="0" value="1.5"></label>
+      <label>Part length (mm)<input type="number" inputmode="decimal" id="qL" step="0.1" min="0" value="500"></label>
+      <label>Part width (mm)<input type="number" inputmode="decimal" id="qW" step="0.1" min="0" value="300"></label>
+      <label>Net area / part (mm²)<input type="number" inputmode="decimal" id="qArea" step="1" min="0" placeholder="optional"></label>
+      <label>Quantity<span class="stepper"><button type="button" data-step="-1" data-for="qQty" aria-label="Decrease">−</button><input type="number" inputmode="numeric" pattern="[0-9]*" id="qQty" step="1" min="1" value="100"><button type="button" data-step="1" data-for="qQty" aria-label="Increase">+</button></span></label>
+      <label>Cut length / part (mm)<input type="number" inputmode="decimal" id="qPerim" step="1" min="0" placeholder="blank = outline of L × W"></label>
+      <label>Pierces / part<input type="number" inputmode="numeric" id="qPierce" step="1" min="0" value="1"></label>
+      <label>Cutting speed (mm/min)<input type="number" inputmode="decimal" id="qSpeed" step="10" min="1"></label>
+      <label>Kerf / gap (mm)<input type="number" inputmode="decimal" id="qKerf" step="0.1" min="0" value="3"></label>
+      <label>Edge margin (mm)<input type="number" inputmode="decimal" id="qMargin" step="0.1" min="0" value="10"></label>
+      <label>Setup time (min)<input type="number" inputmode="decimal" id="qSetup" step="1" min="0" value="20"></label>
+      <label><span>Other costs (<span class="cur"></span>)</span><input type="number" inputmode="decimal" id="qOther" step="0.01" min="0" value="0"></label>
+      <label>Custom sheet L × W (mm)<span style="display:flex;gap:6px"><input type="number" inputmode="decimal" id="qCustL" step="1" min="0" placeholder="L"><input type="number" inputmode="decimal" id="qCustW" step="1" min="0" placeholder="W"></span></label>
+    </div>
+    <div class="subhead">Sheet options <span class="muted" style="text-transform:none;letter-spacing:0;font-weight:400">(tap a row to choose)</span></div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th></th><th class="l">Sheet</th><th>Parts / sheet</th><th>Sheets</th><th>Yield</th><th>Steel kg</th><th>Scrap kg</th><th>Net material</th><th>Material / part</th></tr></thead>
+        <tbody id="quoteRows"></tbody>
+      </table>
+    </div>
+    <div class="subhead">Quote for chosen sheet</div>
+    <div class="kpis" id="quoteKpis"></div>
+    <div class="actions" style="margin-top:14px">
+      <button type="button" class="primary" id="quoteToForm">Use in entry form</button>
+      <button type="button" id="quoteCopy">Copy quote text</button>
+    </div>
+    <p class="note" id="quoteNote"></p>
+  </section>
+
   <section>
     <h2>Summary</h2>
     <div class="kpis" id="kpis"></div>
@@ -280,6 +360,16 @@
   <section>
     <h2>Yield by entry</h2>
     <div id="chart"></div>
+  </section>
+
+  <section>
+    <h2>By grade and thickness</h2>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th class="l">Grade</th><th>t (mm)</th><th>Entries</th><th>Sheets</th><th>Steel kg</th><th>Yield</th><th>Scrap kg</th><th>Scrap value lost</th><th>Total cost</th><th>Cost / part</th></tr></thead>
+        <tbody id="groupRows"></tbody>
+      </table>
+    </div>
   </section>
 
   <section>
@@ -307,6 +397,10 @@
             <th data-k="scrapKg">Scrap kg</th>
             <th data-k="yieldPct">Yield</th>
             <th data-k="nestPct">Nest max</th>
+            <th data-k="totalCost">Total cost</th>
+            <th data-k="costPerPart">Cost / part</th>
+            <th data-k="scrapLoss">Scrap lost</th>
+            <th data-k="marginAct">Margin</th>
             <th class="l"></th>
           </tr>
         </thead>
@@ -333,14 +427,56 @@
   </section>
 </main>
 <div class="toast" id="toast" role="status" hidden></div>
+<datalist id="thicknessList">
+  <option value="0.5"></option><option value="0.6"></option><option value="0.7"></option><option value="0.8"></option><option value="0.9"></option><option value="1"></option><option value="1.2"></option><option value="1.5"></option><option value="2"></option><option value="2.5"></option><option value="3"></option><option value="4"></option><option value="5"></option><option value="6"></option><option value="8"></option><option value="10"></option><option value="12"></option>
+</datalist>
 
 <script>
 (() => {
   const STORE_KEY = 'ss-sheet-yield-v1';
-  const DENSITY = { '304': 7.93, '316': 7.98, '430': 7.70, '201': 7.80, '409': 7.70, '2205': 7.80, 'other': 7.90 };
+  const SETTINGS_KEY = 'ss-sheet-yield-settings-v1';
+  const GRADES = [['304', '304 / 304L'], ['316', '316 / 316L'], ['430', '430'], ['201', '201'], ['409', '409'], ['2205', '2205 Duplex'], ['other', 'Other']];
+  const FINISHES = ['2B', 'BA', 'No.4 / Brushed', 'No.1 / HRAP', 'Mirror / No.8', 'Other'];
+  const SHEET_SIZES = [[2000, 1000, ''], [2438, 1219, '8 × 4 ft'], [2500, 1250, ''], [3000, 1500, ''], [3048, 1524, '10 × 5 ft'], [4000, 2000, '']];
+  // Example values only; users replace them with their own supplier prices and shop rates.
+  const DEFAULT_SETTINGS = {
+    currency: '$', machineRate: 120, labourRate: 40, overheadPct: 15, marginPct: 25, offcutPct: 70,
+    cutSpeed: 3000, pierceSec: 1.5, yieldGood: 80, yieldWarn: 65,
+    grades: {
+      '304': { density: 7.93, price: 3.20, scrap: 1.00 },
+      '316': { density: 7.98, price: 4.80, scrap: 1.50 },
+      '430': { density: 7.70, price: 2.20, scrap: 0.40 },
+      '201': { density: 7.80, price: 2.40, scrap: 0.60 },
+      '409': { density: 7.70, price: 2.10, scrap: 0.40 },
+      '2205': { density: 7.80, price: 6.50, scrap: 1.60 },
+      'other': { density: 7.90, price: 3.00, scrap: 0.80 },
+    },
+    finishes: { '2B': 0, 'BA': 0.40, 'No.4 / Brushed': 0.30, 'No.1 / HRAP': -0.20, 'Mirror / No.8': 1.20, 'Other': 0 },
+  };
+  const clone = o => JSON.parse(JSON.stringify(o));
+  function mergeSettings(saved) {
+    const s = clone(DEFAULT_SETTINGS);
+    if (!saved || typeof saved !== 'object') return s;
+    for (const k of Object.keys(s)) if (k !== 'grades' && k !== 'finishes' && saved[k] !== undefined) s[k] = saved[k];
+    for (const g of Object.keys(s.grades)) Object.assign(s.grades[g], saved.grades?.[g] || {});
+    for (const f of Object.keys(s.finishes)) if (Number.isFinite(saved.finishes?.[f])) s.finishes[f] = saved.finishes[f];
+    return s;
+  }
+  function loadSettings() {
+    try { return mergeSettings(JSON.parse(localStorage.getItem(SETTINGS_KEY))); } catch { return clone(DEFAULT_SETTINGS); }
+  }
+  function saveSettings() {
+    try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)); } catch { /* per-device convenience only */ }
+  }
+  let settings = loadSettings();
+  const gradeInfo = g => settings.grades[g] || settings.grades.other;
+  const autoMatPrice = (g, f) => Math.max(0, gradeInfo(g).price + (settings.finishes[f] || 0));
+
   const $ = id => document.getElementById(id);
   const fmt = (n, d = 1) => Number.isFinite(n) ? n.toLocaleString(undefined, { minimumFractionDigits: d, maximumFractionDigits: d }) : '–';
+  const money = (n, d = 2) => Number.isFinite(n) ? (n < 0 ? '−' : '') + settings.currency + fmt(Math.abs(n), d) : '–';
   const num = id => parseFloat($(id).value);
+  const fin = (x, dflt = 0) => Number.isFinite(x) ? x : dflt;
 
   let toastTimer;
   function notify(msg, isErr) {
@@ -431,10 +567,44 @@
     const plan = nestPlan(e.sheetL, e.sheetW, e.partL, e.partW, e.kerf || 0, e.margin || 0);
     const perSheet = plan ? plan.n : NaN;
     const nestPct = perSheet > 0 ? perSheet * partArea / sheetArea * 100 : NaN;
-    return { ...e, partAreaUsed: partArea, sheetKg, partKg, rejectKg, scrapKg, yieldPct, effPct, plan, perSheet, nestPct };
+
+    // Costs. Entries carry the prices and rates they were saved with; older entries fall back to current settings.
+    const matPrice = fin(e.matPrice, autoMatPrice(e.grade, e.finish));
+    const scrapPrice = fin(e.scrapPrice, gradeInfo(e.grade).scrap);
+    const machineRate = fin(e.machineRate, settings.machineRate), labourRate = fin(e.labourRate, settings.labourRate);
+    const overheadPct = fin(e.overheadPct, settings.overheadPct), offcutPct = fin(e.offcutPct, settings.offcutPct);
+    const marginPct = fin(e.marginPct, settings.marginPct);
+    const good = e.goodParts || 0;
+    const materialCost = sheetKg * matPrice;
+    const scrapCredit = scrapKg * scrapPrice;
+    const offcutCredit = offcut * matPrice * offcutPct / 100;
+    const netMaterial = materialCost - scrapCredit - offcutCredit;
+    const machineCost = fin(e.machineMin) / 60 * machineRate;
+    const labourCost = fin(e.labourMin) / 60 * labourRate;
+    const otherCost = fin(e.otherCost);
+    const directCost = netMaterial + machineCost + labourCost + otherCost;
+    const overheadCost = directCost * overheadPct / 100;
+    const totalCost = directCost + overheadCost;
+    const costPerPart = good > 0 ? totalCost / good : NaN;
+    const matPerPart = good > 0 ? netMaterial / good : NaN;
+    const scrapLoss = scrapKg * (matPrice - scrapPrice);
+    const rejectLoss = rejectKg * (matPrice - scrapPrice);
+    const quotePerPart = marginPct < 100 ? costPerPart / (1 - marginPct / 100) : NaN;
+    const revenue = e.sellPrice > 0 ? e.sellPrice * good : NaN;
+    const profit = revenue - totalCost;
+    const marginAct = revenue > 0 ? profit / revenue * 100 : NaN;
+    // What the job would have saved if every part had been cut from the best-fit nest.
+    const minSheets = perSheet > 0 ? Math.ceil((good + (e.rejects || 0)) / perSheet) : NaN;
+    const extraSheets = Number.isFinite(minSheets) ? Math.max(0, e.sheets - minSheets) : 0;
+    const potentialSaving = e.sheets > 0 ? extraSheets * (sheetKg / e.sheets) * (matPrice - scrapPrice) : 0;
+    return { ...e, partAreaUsed: partArea, sheetKg, partKg, rejectKg, scrapKg, yieldPct, effPct, plan, perSheet, nestPct,
+      matPrice, scrapPrice, machineRate, labourRate, overheadPct, offcutPct, marginPct,
+      materialCost, scrapCredit, offcutCredit, netMaterial, machineCost, labourCost, otherCost, directCost, overheadCost,
+      totalCost, costPerPart, matPerPart, scrapLoss, rejectLoss, quotePerPart, revenue, profit, marginAct,
+      minSheets, extraSheets, potentialSaving };
   }
 
-  function yieldClass(p) { return !Number.isFinite(p) ? '' : p >= 80 ? 'good' : p >= 65 ? 'warn' : 'bad'; }
+  function yieldClass(p) { return !Number.isFinite(p) ? '' : p >= settings.yieldGood ? 'good' : p >= settings.yieldWarn ? 'warn' : 'bad'; }
 
   function readForm() {
     return {
@@ -458,7 +628,26 @@
       kerf: num('kerf') || 0,
       margin: num('margin') || 0,
       notes: $('notes').value.trim(),
+      matPrice: num('matPrice'),
+      scrapPrice: num('scrapPrice'),
+      machineMin: num('machineMin') || 0,
+      labourMin: num('labourMin') || 0,
+      otherCost: num('otherCost') || 0,
+      sellPrice: num('sellPrice') || 0,
+      // Rates are snapshotted so later changes to Prices & rates don't rewrite past jobs.
+      ...(editRates || {
+        machineRate: settings.machineRate, labourRate: settings.labourRate,
+        overheadPct: settings.overheadPct, offcutPct: settings.offcutPct, marginPct: settings.marginPct,
+      }),
     };
+  }
+  let editRates = null;
+
+  function applyAutoPrices() {
+    const g = $('grade').value, f = $('finish').value;
+    $('density').value = gradeInfo(g).density;
+    $('matPrice').value = +autoMatPrice(g, f).toFixed(2);
+    $('scrapPrice').value = gradeInfo(g).scrap;
   }
 
   function fillForm(e) {
@@ -466,6 +655,12 @@
     $('partL').value = e.partL || '';
     $('partW').value = e.partW || '';
     $('partArea').value = e.partArea || '';
+    const c = compute(e);
+    $('matPrice').value = +c.matPrice.toFixed(4);
+    $('scrapPrice').value = +c.scrapPrice.toFixed(4);
+    for (const k of ['machineMin', 'labourMin', 'otherCost']) $(k).value = e[k] || 0;
+    $('sellPrice').value = e.sellPrice || '';
+    syncSheetPreset();
   }
 
   function updatePreview() {
@@ -481,6 +676,21 @@
       ['Best-fit nest', Number.isFinite(c.perSheet) ? `${c.perSheet} / sheet (${fmt(c.nestPct)}%)` : '–'],
     ];
     $('preview').innerHTML = stats.map(([k, v]) => `<div class="stat"><span class="k">${k}</span><span class="v">${v}</span></div>`).join('');
+    const costOk = partOk && Number.isFinite(c.totalCost);
+    const cs = [
+      ['Material bought', money(c.materialCost)],
+      ['Scrap + offcut credit', money(c.scrapCredit + c.offcutCredit)],
+      ['Net material', money(c.netMaterial)],
+      ['Machine + labour', money(c.machineCost + c.labourCost)],
+      ['Overhead', money(c.overheadCost)],
+      ['Total job cost', `<strong>${money(c.totalCost)}</strong>`],
+      ['Cost / good part', costOk ? money(c.costPerPart) : '–'],
+      [`Price / part at ${fmt(c.marginPct, 0)}% margin`, costOk ? money(c.quotePerPart) : '–'],
+      ['Value lost to scrap', money(c.scrapLoss)],
+    ];
+    if (c.revenue > 0) cs.push(['Profit', `<span class="${c.profit >= 0 ? 'money-pos' : 'money-neg'}">${money(c.profit)} (${fmt(c.marginAct)}%)</span>`]);
+    if (c.potentialSaving > 0.005) cs.push(['Saving at best-fit nest', `<span class="warn">${money(c.potentialSaving)} (${c.extraSheets} sheet${c.extraSheets === 1 ? '' : 's'})</span>`]);
+    $('costPreview').innerHTML = cs.map(([k, v]) => `<div class="stat"><span class="k">${k}</span><span class="v">${v}</span></div>`).join('');
     if (!layoutEntryId) { clearTimeout(layoutTimer); layoutTimer = setTimeout(renderLayout, 120); }
   }
 
@@ -597,8 +807,12 @@
         <td>${fmt(e.scrapKg, 1)}</td>
         <td class="${yieldClass(e.yieldPct)}"><strong>${fmt(e.yieldPct)}%</strong></td>
         <td>${Number.isFinite(e.nestPct) ? fmt(e.nestPct) + '%' : '–'}</td>
-        <td class="l"><button class="link" data-layout="${e.id}">Layout</button><button class="link" data-edit="${e.id}">Edit</button><button class="link danger" data-del="${e.id}">Delete</button></td>
-      </tr>`).join('') : `<tr><td colspan="13" class="empty">No entries yet. Add one above.</td></tr>`;
+        <td>${money(e.totalCost)}</td>
+        <td><strong>${money(e.costPerPart)}</strong></td>
+        <td>${money(e.scrapLoss)}</td>
+        <td class="${Number.isFinite(e.marginAct) ? (e.marginAct >= 0 ? 'money-pos' : 'money-neg') : ''}">${Number.isFinite(e.marginAct) ? fmt(e.marginAct) + '%' : '–'}</td>
+        <td class="l"><button class="link" data-layout="${e.id}">Layout</button><button class="link" data-copy="${e.id}">Copy</button><button class="link" data-edit="${e.id}">Edit</button><button class="link danger" data-del="${e.id}">Delete</button></td>
+      </tr>`).join('') : `<tr><td colspan="17" class="empty">No entries yet. Add one above.</td></tr>`;
     document.querySelectorAll('th[data-k]').forEach(th => {
       th.textContent = th.textContent.replace(/ [▲▼]$/, '') + (th.dataset.k === sort.k ? (sort.dir > 0 ? ' ▲' : ' ▼') : '');
     });
@@ -620,7 +834,17 @@
       ['Reusable offcut', fmt(offcut, 0) + ' kg'],
       ['Scrap', fmt(scrapKg, 0) + ' kg'],
       ['Reject rate', good + rejects ? fmt(rejects / (good + rejects) * 100) + '%' : '–'],
+      ['Material bought', money(sum('materialCost'), 0)],
+      ['Value lost to scrap', `<span class="bad">${money(sum('scrapLoss'), 0)}</span>`],
+      ['Total job cost', money(sum('totalCost'), 0)],
+      ['Avg cost / part', good ? money(sum('totalCost') / good) : '–'],
+      ['Saving at best-fit nest', money(sum('potentialSaving'), 0)],
     ];
+    const sold = list.filter(e => e.revenue > 0);
+    if (sold.length) {
+      const rev = sold.reduce((s, e) => s + e.revenue, 0), prof = sold.reduce((s, e) => s + e.profit, 0);
+      k.push(['Revenue', money(rev, 0)], ['Profit', `<span class="${prof >= 0 ? 'money-pos' : 'money-neg'}">${money(prof, 0)} (${fmt(prof / rev * 100)}%)</span>`]);
+    }
     $('kpis').innerHTML = k.map(([a, b]) => `<div class="kpi stat"><span class="k">${a}</span><span class="v">${b}</span></div>`).join('');
   }
 
@@ -652,14 +876,177 @@
     renderTable(list);
     renderKpis(list);
     renderChart(list);
+    renderGroups(list);
     if (layoutEntryId) renderLayout();
+  }
+
+  function renderGroups(list) {
+    const groups = new Map();
+    for (const e of list) {
+      const key = `${e.grade}|${e.thickness}`;
+      if (!groups.has(key)) groups.set(key, []);
+      groups.get(key).push(e);
+    }
+    const rows = [...groups.entries()].map(([key, es]) => {
+      const sum = k => es.reduce((s, e) => s + (e[k] || 0), 0);
+      const area = es.reduce((s, e) => s + e.sheetL * e.sheetW * e.sheets, 0);
+      const partArea = es.reduce((s, e) => s + e.partAreaUsed * e.goodParts, 0);
+      const good = sum('goodParts');
+      return { grade: es[0].grade, t: es[0].thickness, n: es.length, sheets: sum('sheets'), kg: sum('sheetKg'),
+        y: area ? partArea / area * 100 : NaN, scrap: sum('scrapKg'), loss: sum('scrapLoss'), cost: sum('totalCost'), cpp: good ? sum('totalCost') / good : NaN };
+    }).sort((a, b) => a.grade.localeCompare(b.grade) || a.t - b.t);
+    $('groupRows').innerHTML = rows.length ? rows.map(r => `<tr>
+      <td class="l">${esc(r.grade)}</td><td>${fmt(r.t, 2)}</td><td>${r.n}</td><td>${r.sheets}</td><td>${fmt(r.kg, 0)}</td>
+      <td class="${yieldClass(r.y)}"><strong>${fmt(r.y)}%</strong></td><td>${fmt(r.scrap, 0)}</td><td>${money(r.loss, 0)}</td>
+      <td>${money(r.cost, 0)}</td><td>${money(r.cpp)}</td></tr>`).join('')
+      : '<tr><td colspan="10" class="empty">Appears once entries are added.</td></tr>';
+  }
+
+  // ---------- Quote & sheet planner ----------
+  let quotePick = null, quoteResult = null;
+
+  function computeQuote() {
+    const g = $('qGrade').value, f = $('qFinish').value, t = num('qThick');
+    const pL = num('qL'), pW = num('qW'), qty = Math.max(0, Math.floor(num('qQty') || 0));
+    const area = num('qArea') > 0 ? num('qArea') : pL * pW;
+    const kerf = num('qKerf') || 0, margin = num('qMargin') || 0;
+    const density = gradeInfo(g).density, price = autoMatPrice(g, f), scrap = gradeInfo(g).scrap;
+    const kgPerMm2 = t * density / 1e6;
+    const sizes = SHEET_SIZES.map(([L, W, lab]) => ({ L, W, lab }));
+    if (num('qCustL') > 0 && num('qCustW') > 0) sizes.push({ L: num('qCustL'), W: num('qCustW'), lab: 'custom' });
+    const options = sizes.map(sz => {
+      const plan = nestPlan(sz.L, sz.W, pL, pW, kerf, margin);
+      const per = plan ? plan.n : 0;
+      const sheets = per > 0 && qty > 0 ? Math.ceil(qty / per) : NaN;
+      const steelKg = sheets * sz.L * sz.W * kgPerMm2;
+      const partKg = area * qty * kgPerMm2;
+      const scrapKg = steelKg - partKg;
+      const netMat = steelKg * price - scrapKg * scrap;
+      return { ...sz, per, sheets, steelKg, scrapKg, netMat, y: sheets ? area * qty / (sheets * sz.L * sz.W) * 100 : NaN, matPerPart: qty ? netMat / qty : NaN };
+    });
+    const valid = options.filter(o => Number.isFinite(o.netMat) && o.per > 0);
+    const best = valid.reduce((b, o) => !b || o.netMat < b.netMat - 1e-9 || (Math.abs(o.netMat - b.netMat) < 1e-9 && o.y > b.y) ? o : b, null);
+    const chosen = options.find(o => quotePick && o.L === quotePick.L && o.W === quotePick.W && o.per > 0) || best;
+
+    const perim = num('qPerim') > 0 ? num('qPerim') : 2 * (pL + pW);
+    const speed = num('qSpeed') > 0 ? num('qSpeed') : settings.cutSpeed;
+    const pierces = fin(num('qPierce'));
+    const cutMin = qty * (perim / speed + pierces * settings.pierceSec / 60);
+    const setup = fin(num('qSetup')), other = fin(num('qOther'));
+    let q = null;
+    if (chosen) {
+      const machine = cutMin / 60 * settings.machineRate;
+      const labour = (cutMin + setup) / 60 * settings.labourRate;
+      const direct = chosen.netMat + machine + labour + other;
+      const overhead = direct * settings.overheadPct / 100;
+      const total = direct + overhead;
+      const perPart = qty ? total / qty : NaN;
+      const m = settings.marginPct;
+      const pricePart = m < 100 ? perPart / (1 - m / 100) : NaN;
+      q = { chosen, machine, labour, direct, overhead, total, perPart, pricePart, priceTotal: pricePart * qty, cutMin, setup, other, perim, speed, price, scrap };
+    }
+    return { g, f, t, pL, pW, area, qty, kerf, margin, options, best, chosen, q };
+  }
+
+  function renderQuote() {
+    const r = quoteResult = computeQuote();
+    $('quoteRows').innerHTML = r.options.map((o, i) => {
+      const ok = o.per > 0 && Number.isFinite(o.sheets);
+      const isPick = r.chosen && o.L === r.chosen.L && o.W === r.chosen.W;
+      return `<tr class="pick ${o === r.best ? 'best' : ''}" data-q="${i}">
+        <td><input type="radio" name="qSheet" ${isPick ? 'checked' : ''} ${ok ? '' : 'disabled'} aria-label="Choose ${o.L} × ${o.W}"></td>
+        <td class="l">${fmt(o.L, 0)} × ${fmt(o.W, 0)}${o.lab ? ` <span class="muted">${esc(o.lab)}</span>` : ''}${o === r.best ? ' <span class="good">cheapest</span>' : ''}</td>
+        <td>${ok ? o.per : '–'}</td><td>${ok ? o.sheets : '–'}</td>
+        <td class="${yieldClass(o.y)}">${ok ? fmt(o.y) + '%' : '–'}</td>
+        <td>${ok ? fmt(o.steelKg, 1) : '–'}</td><td>${ok ? fmt(o.scrapKg, 1) : '–'}</td>
+        <td>${ok ? money(o.netMat) : '–'}</td><td>${ok ? money(o.matPerPart) : '–'}</td></tr>`;
+    }).join('');
+    const q = r.q;
+    if (!q) {
+      $('quoteKpis').innerHTML = '<p class="empty">Enter part size, thickness and quantity. The part must fit on at least one sheet size.</p>';
+      $('quoteNote').textContent = '';
+      return;
+    }
+    const k = [
+      [`Sheets of ${fmt(q.chosen.L, 0)} × ${fmt(q.chosen.W, 0)}`, q.chosen.sheets],
+      ['Net material', money(q.chosen.netMat)],
+      ['Cutting time', `${fmt(q.cutMin, 0)} min`],
+      ['Machine', money(q.machine)],
+      ['Labour (incl. setup)', money(q.labour)],
+      ['Overhead', money(q.overhead)],
+      ['Total cost', `<strong>${money(q.total)}</strong>`],
+      ['Cost / part', money(q.perPart)],
+      [`Price / part at ${fmt(settings.marginPct, 0)}%`, `<strong class="good">${money(q.pricePart)}</strong>`],
+      ['Quote total', `<strong>${money(q.priceTotal)}</strong>`],
+    ];
+    $('quoteKpis').innerHTML = k.map(([a, b]) => `<div class="kpi stat"><span class="k">${a}</span><span class="v">${b}</span></div>`).join('');
+    const notes = [`Cut length ${fmt(q.perim, 0)} mm per part at ${fmt(q.speed, 0)} mm/min, ${fmt(settings.pierceSec, 1)} s per pierce.`,
+      `Material at ${money(q.price)}/kg with scrap credited at ${money(q.scrap)}/kg.`,
+      'Leftover from the last sheet is counted as scrap; if you keep it as offcut the real cost is lower.'];
+    $('quoteNote').textContent = notes.join(' ');
+  }
+
+  function quoteText() {
+    const r = quoteResult, q = r && r.q;
+    if (!q) return '';
+    const gName = (GRADES.find(x => x[0] === r.g) || [r.g, r.g])[1];
+    return [
+      `Quote: ${r.qty} × ${fmt(r.pL, 0)} × ${fmt(r.pW, 0)} mm, ${gName} ${r.f}, ${fmt(r.t, 2)} mm`,
+      `Material: ${q.chosen.sheets} sheet(s) ${fmt(q.chosen.L, 0)} × ${fmt(q.chosen.W, 0)} mm, ${q.chosen.per} parts/sheet, yield ${fmt(q.chosen.y)}%`,
+      `Net material: ${money(q.chosen.netMat)}`,
+      `Cutting: ${fmt(q.cutMin, 0)} min machine ${money(q.machine)}, labour incl. ${fmt(q.setup, 0)} min setup ${money(q.labour)}`,
+      q.other ? `Other: ${money(q.other)}` : null,
+      `Overhead ${fmt(settings.overheadPct, 0)}%: ${money(q.overhead)}`,
+      `Total cost: ${money(q.total)} (${money(q.perPart)} per part)`,
+      `Price at ${fmt(settings.marginPct, 0)}% margin: ${money(q.pricePart)} per part, ${money(q.priceTotal)} total`,
+    ].filter(Boolean).join('\n');
+  }
+
+  // ---------- Settings UI ----------
+  const SETTING_FIELDS = { sCurrency: 'currency', sMachineRate: 'machineRate', sLabourRate: 'labourRate', sOverheadPct: 'overheadPct',
+    sMarginPct: 'marginPct', sOffcutPct: 'offcutPct', sCutSpeed: 'cutSpeed', sPierceSec: 'pierceSec', sYieldGood: 'yieldGood', sYieldWarn: 'yieldWarn' };
+
+  function renderSettings() {
+    for (const [id, k] of Object.entries(SETTING_FIELDS)) $(id).value = settings[k];
+    $('gradeRows').innerHTML = GRADES.map(([g, name]) => {
+      const gi = settings.grades[g];
+      return `<tr><td class="l">${esc(name)}</td>
+        <td><input type="number" inputmode="decimal" step="0.01" min="0" id="gd-${g}" data-g="${g}" data-k="density" value="${gi.density}"></td>
+        <td><input type="number" inputmode="decimal" step="0.01" min="0" id="gp-${g}" data-g="${g}" data-k="price" value="${gi.price}"></td>
+        <td><input type="number" inputmode="decimal" step="0.01" min="0" id="gs-${g}" data-g="${g}" data-k="scrap" value="${gi.scrap}"></td></tr>`;
+    }).join('');
+    $('finishRows').innerHTML = FINISHES.map((f, i) => `<tr><td class="l">${esc(f)}</td>
+      <td><input type="number" inputmode="decimal" step="0.01" id="fs-${i}" data-f="${esc(f)}" value="${settings.finishes[f]}"></td></tr>`).join('');
+    document.querySelectorAll('.cur').forEach(el => { el.textContent = settings.currency; });
+    if (!$('qSpeed').value) $('qSpeed').value = settings.cutSpeed;
+  }
+
+  function onSettingsChanged() {
+    saveSettings();
+    document.querySelectorAll('.cur').forEach(el => { el.textContent = settings.currency; });
+    if (!$('editId').value) applyAutoPrices();
+    updatePreview();
+    render();
+    renderQuote();
+  }
+
+  function fillSelects() {
+    document.querySelectorAll('.grade-select').forEach(sel => { sel.innerHTML = GRADES.map(([v, n]) => `<option value="${v}">${esc(n)}</option>`).join(''); });
+    document.querySelectorAll('.finish-select').forEach(sel => { sel.innerHTML = FINISHES.map(f => `<option>${esc(f)}</option>`).join(''); });
+    $('sheetPreset').innerHTML = SHEET_SIZES.map(([L, W, lab]) => `<option value="${L}x${W}" ${L === 2438 ? 'selected' : ''}>${L} × ${W}${lab ? ` (${lab})` : ''}</option>`).join('') + '<option value="custom">Custom</option>';
+  }
+  function syncSheetPreset() {
+    const v = `${num('sheetL')}x${num('sheetW')}`;
+    $('sheetPreset').value = SHEET_SIZES.some(([L, W]) => `${L}x${W}` === v) ? v : 'custom';
   }
 
   function resetForm() {
     $('entryForm').reset();
     $('editId').value = '';
     $('date').value = new Date().toISOString().slice(0, 10);
-    $('density').value = DENSITY[$('grade').value];
+    editRates = null;
+    applyAutoPrices();
+    syncSheetPreset();
     $('formTitle').textContent = 'New entry';
     $('submitBtn').textContent = 'Save entry';
     $('cancelEdit').classList.add('hidden');
@@ -667,7 +1054,79 @@
   }
 
   // Events
-  $('grade').addEventListener('change', () => { $('density').value = DENSITY[$('grade').value]; updatePreview(); });
+  $('grade').addEventListener('change', () => { applyAutoPrices(); updatePreview(); });
+  $('finish').addEventListener('change', () => { applyAutoPrices(); updatePreview(); });
+  $('sheetPreset').addEventListener('change', () => {
+    const v = $('sheetPreset').value;
+    if (v !== 'custom') { const [L, W] = v.split('x'); $('sheetL').value = L; $('sheetW').value = W; updatePreview(); }
+  });
+  $('sheetL').addEventListener('input', syncSheetPreset);
+  $('sheetW').addEventListener('input', syncSheetPreset);
+
+  // Settings events
+  $('settingsPanel').addEventListener('input', ev => {
+    const el = ev.target;
+    if (SETTING_FIELDS[el.id]) {
+      const k = SETTING_FIELDS[el.id];
+      if (k === 'currency') settings.currency = el.value || '$';
+      else if (Number.isFinite(parseFloat(el.value))) settings[k] = parseFloat(el.value);
+      else return;
+    } else if (el.dataset.g) {
+      const v = parseFloat(el.value);
+      if (!Number.isFinite(v)) return;
+      settings.grades[el.dataset.g][el.dataset.k] = v;
+    } else if (el.dataset.f) {
+      const v = parseFloat(el.value);
+      if (!Number.isFinite(v)) return;
+      settings.finishes[el.dataset.f] = v;
+    } else return;
+    onSettingsChanged();
+  });
+  $('resetSettings').addEventListener('click', ev => confirmTap(ev.currentTarget, 'Tap again to reset prices & rates', () => {
+    settings = clone(DEFAULT_SETTINGS);
+    renderSettings();
+    onSettingsChanged();
+    notify('Prices & rates reset to example values.');
+  }));
+
+  // Quote events
+  $('quoteSection').addEventListener('input', ev => { if (ev.target.name !== 'qSheet') renderQuote(); });
+  $('quoteSection').addEventListener('change', ev => { if (ev.target.tagName === 'SELECT') renderQuote(); });
+  $('quoteRows').addEventListener('click', ev => {
+    const tr = ev.target.closest('tr[data-q]');
+    if (!tr || !quoteResult) return;
+    const o = quoteResult.options[Number(tr.dataset.q)];
+    if (!(o.per > 0)) return;
+    quotePick = { L: o.L, W: o.W };
+    renderQuote();
+  });
+  $('quoteCopy').addEventListener('click', () => {
+    const text = quoteText();
+    if (!text) { notify('Nothing to copy yet. Fill in the quote first.', true); return; }
+    const fallback = () => showExport('Quote text', 'quote.txt', text, 'text/plain');
+    if (navigator.clipboard?.writeText) navigator.clipboard.writeText(text).then(() => notify('Quote copied.'), fallback);
+    else fallback();
+  });
+  $('quoteToForm').addEventListener('click', () => {
+    const r = quoteResult, q = r && r.q;
+    if (!q) { notify('Fill in the quote first.', true); return; }
+    resetForm();
+    $('grade').value = r.g; $('finish').value = r.f; applyAutoPrices();
+    $('thickness').value = r.t;
+    $('sheetL').value = q.chosen.L; $('sheetW').value = q.chosen.W; syncSheetPreset();
+    $('sheets').value = q.chosen.sheets;
+    $('partL').value = r.pL; $('partW').value = r.pW;
+    $('partArea').value = num('qArea') > 0 ? num('qArea') : '';
+    $('goodParts').value = r.qty; $('rejects').value = 0;
+    $('kerf').value = r.kerf; $('margin').value = r.margin;
+    $('machineMin').value = +q.cutMin.toFixed(1);
+    $('labourMin').value = +(q.cutMin + q.setup).toFixed(1);
+    $('otherCost').value = q.other;
+    $('sellPrice').value = +q.pricePart.toFixed(2);
+    updatePreview();
+    $('formTitle').scrollIntoView({ behavior: 'smooth' });
+    notify('Quote loaded into the entry form. Adjust to actuals after cutting, then save.');
+  });
   $('entryForm').addEventListener('input', updatePreview);
   $('resetBtn').addEventListener('click', resetForm);
   $('cancelEdit').addEventListener('click', resetForm);
@@ -708,7 +1167,7 @@
   });
 
   $('rows').addEventListener('click', ev => {
-    const edit = ev.target.dataset.edit, del = ev.target.dataset.del, lay = ev.target.dataset.layout;
+    const edit = ev.target.dataset.edit, del = ev.target.dataset.del, lay = ev.target.dataset.layout, cp = ev.target.dataset.copy;
     if (lay) {
       layoutEntryId = Number(lay);
       layoutSheet = 0;
@@ -719,11 +1178,21 @@
       if (!e) return;
       fillForm(e);
       $('editId').value = e.id;
+      const c = compute(e);
+      editRates = { machineRate: c.machineRate, labourRate: c.labourRate, overheadPct: c.overheadPct, offcutPct: c.offcutPct, marginPct: c.marginPct };
       $('formTitle').textContent = 'Edit entry';
       $('submitBtn').textContent = 'Update entry';
       $('cancelEdit').classList.remove('hidden');
       updatePreview();
       $('formTitle').scrollIntoView({ behavior: 'smooth' });
+    } else if (cp) {
+      const e = entries.find(x => String(x.id) === cp);
+      if (!e) return;
+      resetForm();
+      fillForm({ ...e, date: new Date().toISOString().slice(0, 10) });
+      updatePreview();
+      $('formTitle').scrollIntoView({ behavior: 'smooth' });
+      notify('Copied into a new entry. Update the counts and save.');
     } else if (del) {
       confirmTap(ev.target, 'Tap to delete', () => {
         entries = entries.filter(x => String(x.id) !== del);
@@ -764,25 +1233,27 @@
   });
 
   $('exportCsv').addEventListener('click', () => {
-    const cols = ['date','job','part','operator','grade','finish','thickness','density','sheetL','sheetW','sheets','partL','partW','partAreaUsed','goodParts','rejects','offcut','kerf','margin','sheetKg','partKg','scrapKg','yieldPct','effPct','perSheet','nestPct','notes'];
+    const cols = ['date','job','part','operator','grade','finish','thickness','density','sheetL','sheetW','sheets','partL','partW','partAreaUsed','goodParts','rejects','offcut','kerf','margin','sheetKg','partKg','scrapKg','yieldPct','effPct','perSheet','nestPct','matPrice','scrapPrice','machineMin','labourMin','otherCost','sellPrice','materialCost','scrapCredit','offcutCredit','netMaterial','machineCost','labourCost','overheadCost','totalCost','costPerPart','quotePerPart','scrapLoss','revenue','profit','marginAct','potentialSaving','notes'];
     const cell = v => typeof v === 'number' ? (Number.isFinite(v) ? +v.toFixed(3) : '') : `"${String(v ?? '').replace(/"/g, '""')}"`;
     const csv = [cols.join(','), ...filtered().map(e => cols.map(c => cell(e[c])).join(','))].join('\n');
     showExport(`CSV of ${filtered().length} filtered entries`, `sheet-yield-${new Date().toISOString().slice(0, 10)}.csv`, csv, 'text/csv');
   });
-  $('exportJson').addEventListener('click', () => showExport(`Backup of all ${entries.length} entries (JSON)`, 'sheet-yield-backup.json', JSON.stringify(entries, null, 2), 'application/json'));
+  $('exportJson').addEventListener('click', () => showExport(`Backup of all ${entries.length} entries plus prices & rates (JSON)`, 'sheet-yield-backup.json', JSON.stringify({ version: 2, entries, settings }, null, 2), 'application/json'));
   $('importBtn').addEventListener('click', () => $('importFile').click());
   $('importFile').addEventListener('change', async () => {
     const f = $('importFile').files[0];
     if (!f) return;
     try {
       const data = JSON.parse(await f.text());
-      if (!Array.isArray(data)) throw new Error('not a list');
+      const list = Array.isArray(data) ? data : data && Array.isArray(data.entries) ? data.entries : null;
+      if (!list) throw new Error('not a backup');
       const ids = new Set(entries.map(e => e.id));
-      const added = data.filter(e => e && e.id && !ids.has(e.id));
+      const added = list.filter(e => e && e.id && !ids.has(e.id));
       entries.push(...added);
       save();
+      if (!Array.isArray(data) && data.settings) { settings = mergeSettings(data.settings); saveSettings(); renderSettings(); onSettingsChanged(); }
       render();
-      notify(`Imported ${added.length} entr${added.length === 1 ? 'y' : 'ies'}.`);
+      notify(`Imported ${added.length} entr${added.length === 1 ? 'y' : 'ies'}${!Array.isArray(data) && data.settings ? ' and prices & rates' : ''}.`);
     } catch (err) {
       notify('Could not read that file. Choose a backup .json exported from this page.', true);
     }
@@ -798,8 +1269,11 @@
     });
   });
 
+  fillSelects();
+  renderSettings();
   resetForm();
   render();
+  renderQuote();
 })();
 </script>
 </body>
