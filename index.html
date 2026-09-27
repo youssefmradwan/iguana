@@ -262,7 +262,7 @@
         <legend>Costs</legend>
         <div class="grid">
           <label><span>Material price (<span class="cur"></span>/kg)</span><input type="number" inputmode="decimal" id="matPrice" step="0.01" min="0"></label>
-          <label>Machine time (min)<input type="number" inputmode="decimal" id="machineMin" step="0.1" min="0" value="0"></label>
+          <label>Machine time, all sheets (min)<input type="number" inputmode="decimal" id="machineMin" step="0.1" min="0" value="0"></label>
           <label>Labour charged<select id="labourMode"><option value="min">Per minute</option><option value="part">Fixed fee per part</option></select></label>
           <label id="labourMinWrap">Labour time (min)<input type="number" inputmode="decimal" id="labourMin" step="0.1" min="0" value="0"></label>
           <label id="labourFeeWrap"><span>Labour fee (<span class="cur"></span>/part)</span><input type="number" inputmode="decimal" id="labourPerPart" step="0.01" min="0"></label>
@@ -276,7 +276,7 @@
       <div class="preview" id="costPreview"></div>
       <div class="table-wrap" id="partCostWrap" hidden>
         <table>
-          <thead><tr><th class="l">Part</th><th>Good</th><th>Cost / part</th><th>Price at margin</th><th>Selling price</th><th>Margin</th></tr></thead>
+          <thead><tr><th class="l">Part</th><th>Good</th><th>Machine min / part</th><th>Cost / part</th><th>Price at margin</th><th>Selling price</th><th>Margin</th></tr></thead>
           <tbody id="partCostRows"></tbody>
         </table>
       </div>
@@ -286,7 +286,7 @@
         <button type="button" id="cancelEdit" class="hidden">Cancel edit</button>
         <button type="button" id="resetBtn">Clear</button>
       </div>
-      <p class="note">Yield = net area of good parts ÷ total sheet area. If a part's net area is blank, length × width is used. Best nest is the yield you'd get cutting all parts on the fewest sheets the layout needs. With several parts, costs are shared by part area; machine time is shared the same way.</p>
+      <p class="note">Yield = net area of good parts ÷ total sheet area. If a part's net area is blank, length × width is used. Best nest is the yield you'd get cutting all parts on the fewest sheets the layout needs. Machine time is the total for the sheets and is divided equally between all parts cut (good and rejected). Material and other costs are shared by part area.</p>
     </form>
   </section>
 
@@ -319,6 +319,7 @@
       <label>Kerf / gap (mm)<input type="number" inputmode="decimal" id="qKerf" step="0.1" min="0" value="3"></label>
       <label>Edge margin (mm)<input type="number" inputmode="decimal" id="qMargin" step="0.1" min="0" value="10"></label>
       <label>Labour charged<select id="qLabourMode"><option value="min">Per minute</option><option value="part">Fixed fee per part</option></select></label>
+      <label>Machine time / sheet (min)<input type="number" inputmode="decimal" id="qMachSheet" step="0.1" min="0" value="12"></label>
       <label id="qSetupWrap">Setup time (min)<input type="number" inputmode="decimal" id="qSetup" step="1" min="0" value="20"></label>
       <label><span>Other costs (<span class="cur"></span>)</span><input type="number" inputmode="decimal" id="qOther" step="0.01" min="0" value="0"></label>
       <label>Custom sheet L × W (mm)<span style="display:flex;gap:6px"><input type="number" inputmode="decimal" id="qCustL" step="1" min="0" placeholder="L"><input type="number" inputmode="decimal" id="qCustW" step="1" min="0" placeholder="W"></span></label>
@@ -338,7 +339,7 @@
     <div class="kpis" id="quoteKpis"></div>
     <div class="table-wrap" style="margin-top:12px">
       <table>
-        <thead><tr><th class="l">Part</th><th>Qty</th><th>Machine min</th><th>Cost / part</th><th>Price / part</th><th>Line total</th></tr></thead>
+        <thead><tr><th class="l">Part</th><th>Qty</th><th>Machine min / part</th><th>Cost / part</th><th>Price / part</th><th>Line total</th></tr></thead>
         <tbody id="quoteParts"></tbody>
       </table>
     </div>
@@ -707,15 +708,19 @@
     const extraSheets = Number.isFinite(minSheets) ? Math.max(0, sheets - minSheets) : 0;
     const potentialSaving = sheets > 0 ? extraSheets * (sheetKg / sheets) * matPrice : 0;
 
-    // Per part: material, machine and other costs shared by area cut (good + rejected); labour by fee or by area.
-    const cutArea = goodArea + rejArea;
+    // Per part: machine time (and per-minute labour) is for the whole sheet, split equally over every part cut.
+    // Material and other costs are shared by area cut. Rejected parts' cost is carried by the good ones.
+    const cutArea = goodArea + rejArea, cutCount = good + rejects;
+    const machMinPerPart = cutCount > 0 ? fin(e.machineMin) / cutCount : NaN;
     const partCosts = parts.map((p, i) => {
       const n = (p.good || 0) + (p.rejects || 0);
-      const share = cutArea > 0 ? partArea(p) * n / cutArea : 0;
-      const alloc = (materialCost + machineCost + otherCost) * share + (labourMode === 'part' ? labourPerPart * n : labourCost * share);
+      const areaShare = cutArea > 0 ? partArea(p) * n / cutArea : 0;
+      const countShare = cutCount > 0 ? n / cutCount : 0;
+      const alloc = (materialCost + otherCost) * areaShare + machineCost * countShare
+        + (labourMode === 'part' ? labourPerPart * n : labourCost * countShare);
       const unit = p.good > 0 ? alloc / p.good : NaN;
       const price = marginPct < 100 ? unit / (1 - marginPct / 100) : NaN;
-      return { i, name: p.name, good: p.good || 0, unit, price, sell: p.sell || 0, margin: p.sell > 0 ? (p.sell - unit) / p.sell * 100 : NaN };
+      return { i, name: p.name, good: p.good || 0, mach: machMinPerPart, unit, price, sell: p.sell || 0, margin: p.sell > 0 ? (p.sell - unit) / p.sell * 100 : NaN };
     });
 
     return { ...e, parts, unsized, good, rejects, goodArea, partNames: parts.map(p => p.name).filter(Boolean).join(', '),
@@ -723,7 +728,7 @@
       sheetKg, partKg, rejectKg, scrapKg, yieldPct, nest, minSheets, perSheet, bestPct,
       matPrice, machineRateMin, labourRateMin, labourMode, labourPerPart, marginPct,
       materialCost, machineCost, labourCost, otherCost, totalCost, costPerPart, quotePerPart,
-      revenue, profit, marginAct, scrapLoss, extraSheets, potentialSaving, partCosts };
+      revenue, profit, marginAct, scrapLoss, extraSheets, potentialSaving, partCosts, machMinPerPart };
   }
 
   function yieldClass(p) { return !Number.isFinite(p) ? '' : p >= settings.yieldGood ? 'good' : p >= settings.yieldWarn ? 'warn' : 'bad'; }
@@ -737,7 +742,7 @@
     const extra = kind === 'e'
       ? stepper('good', 'Good parts', p.good ?? '', 0) + stepper('rejects', 'Rejected', p.rejects ?? 0, 0)
         + field('sell', `<span>Selling price / part (<span class="cur">${esc(settings.currency)}</span>)</span>`, p.sell || '', '0.01', 'optional')
-      : stepper('qty', 'Quantity', p.qty ?? 1, 1) + field('mach', 'Machine time / part (min)', p.mach ?? 0.5, '0.01');
+      : stepper('qty', 'Quantity', p.qty ?? 1, 1);
     return `<div class="part-row" data-u="${u}">
       <div class="row-head"><span><i class="swatch" style="background:${partColor(idx)}"></i><span class="row-title">Part ${letter(idx)}</span></span><button type="button" class="link danger" data-remove-part>Remove</button></div>
       <label>Part name<input type="text" id="${u}-name" data-f="name" value="${esc(p.name || '')}" placeholder="e.g. Bracket A"></label>
@@ -761,7 +766,7 @@
   }
   function addPartRow(id, kind) {
     const c = $(id), n = c.querySelectorAll('.part-row').length;
-    c.insertAdjacentHTML('beforeend', partRowHTML(kind, kind === 'e' ? { good: '', rejects: 0 } : { qty: 1, mach: 0.5 }, n));
+    c.insertAdjacentHTML('beforeend', partRowHTML(kind, kind === 'e' ? { good: '', rejects: 0 } : { qty: 1 }, n));
     renumberRows(c);
     c.lastElementChild.querySelector('[data-f="name"]').focus();
   }
@@ -772,7 +777,7 @@
       const base = { name: el('name').value.trim(), L: n('L') || 0, W: n('W') || 0, area: n('area') || 0 };
       return kind === 'e'
         ? { ...base, good: Math.max(0, Math.floor(n('good') || 0)), rejects: Math.max(0, Math.floor(n('rejects') || 0)), sell: n('sell') || 0 }
-        : { ...base, qty: Math.max(0, Math.floor(n('qty') || 0)), mach: n('mach') || 0 };
+        : { ...base, qty: Math.max(0, Math.floor(n('qty') || 0)) };
     });
   }
 
@@ -854,7 +859,7 @@
     const costOk = partOk && Number.isFinite(c.totalCost);
     const cs = [
       ['Material', money(c.materialCost)],
-      ['Machine', money(c.machineCost)],
+      [Number.isFinite(c.machMinPerPart) && c.machineMin > 0 ? `Machine (${fmt(c.machMinPerPart, 2)} min / part)` : 'Machine', money(c.machineCost)],
       [c.labourMode === 'part' ? `Labour (${c.good + c.rejects} × ${money(c.labourPerPart)})` : 'Labour', money(c.labourCost)],
       ['Total job cost', `<strong>${money(c.totalCost)}</strong>`],
       ['Cost / good part', costOk ? money(c.costPerPart) : '–'],
@@ -869,7 +874,7 @@
     $('partCostWrap').hidden = !showParts;
     if (showParts) $('partCostRows').innerHTML = c.partCosts.map(pc => `<tr>
       <td class="l"><i class="swatch" style="background:${partColor(pc.i)}"></i>${letter(pc.i)} ${esc(pc.name)}</td>
-      <td>${pc.good}</td><td>${money(pc.unit)}</td><td>${money(pc.price)}</td><td>${pc.sell ? money(pc.sell) : '–'}</td>
+      <td>${pc.good}</td><td>${fmt(pc.mach, 2)}</td><td>${money(pc.unit)}</td><td>${money(pc.price)}</td><td>${pc.sell ? money(pc.sell) : '–'}</td>
       <td class="${Number.isFinite(pc.margin) ? (pc.margin >= 0 ? 'money-pos' : 'money-neg') : ''}">${Number.isFinite(pc.margin) ? fmt(pc.margin) + '%' : '–'}</td></tr>`).join('');
 
     if (!layoutEntryId) { clearTimeout(layoutTimer); layoutTimer = setTimeout(renderLayout, 120); }
@@ -1131,24 +1136,26 @@
 
     const labourMode = $('qLabourMode').value;
     const setup = labourMode === 'part' ? 0 : fin(num('qSetup')), other = fin(num('qOther'));
-    const cutMin = parts.filter(usable).reduce((s, p) => s + p.qty * p.mach, 0);
+    const machSheet = fin(num('qMachSheet'));
     let q = null;
     if (chosen && qty > 0) {
+      // Machine time is per sheet; the job total is split equally over every part.
+      const cutMin = machSheet * chosen.sheets;
       const machine = cutMin * settings.machineRateMin;
       const labour = labourMode === 'part' ? settings.labourPerPart * qty : (cutMin + setup) * settings.labourRateMin;
       const total = chosen.mat + machine + labour + other;
       const m = settings.marginPct;
       const lines = parts.map((p, i) => ({ p, i })).filter(({ p }) => usable(p)).map(({ p, i }) => {
         const share = areaTotal > 0 ? partArea(p) * p.qty / areaTotal : 0;
-        const ownMach = p.qty * p.mach;
-        const alloc = (chosen.mat + other) * share + ownMach * settings.machineRateMin
-          + (labourMode === 'part' ? settings.labourPerPart * p.qty : (ownMach + setup * p.qty / qty) * settings.labourRateMin);
+        const countShare = p.qty / qty;
+        const alloc = (chosen.mat + other) * share + machine * countShare
+          + (labourMode === 'part' ? settings.labourPerPart * p.qty : labour * countShare);
         const unit = p.qty > 0 ? alloc / p.qty : NaN;
         const pricePart = m < 100 ? unit / (1 - m / 100) : NaN;
-        return { i, name: p.name, qty: p.qty, mach: ownMach, unit, pricePart, line: pricePart * p.qty };
+        return { i, name: p.name, qty: p.qty, mach: cutMin / qty, unit, pricePart, line: pricePart * p.qty };
       });
       const priceTotal = lines.reduce((s, l) => s + fin(l.line), 0);
-      q = { chosen, machine, labour, labourMode, total, perPart: total / qty, priceTotal, cutMin, setup, other, price, lines };
+      q = { chosen, machine, labour, labourMode, total, perPart: total / qty, priceTotal, cutMin, machSheet, setup, other, price, lines };
     }
     return { g, f, t, parts, qty, kerf, margin, options, best, chosen, q };
   }
@@ -1176,7 +1183,7 @@
     const k = [
       [`Sheets of ${fmt(q.chosen.L, 0)} × ${fmt(q.chosen.W, 0)}`, q.chosen.sheets],
       ['Material', money(q.chosen.mat)],
-      ['Machine time', `${fmt(q.cutMin, 0)} min`],
+      ['Machine time', `${fmt(q.cutMin, 0)} min (${q.chosen.sheets} × ${fmt(q.machSheet, 1)})`],
       ['Machine', money(q.machine)],
       [q.labourMode === 'part' ? `Labour (${r.qty} × ${money(settings.labourPerPart)})` : 'Labour (incl. setup)', money(q.labour)],
       ['Total cost', `<strong>${money(q.total)}</strong>`],
@@ -1186,9 +1193,10 @@
     $('quoteKpis').innerHTML = k.map(([a, b]) => `<div class="kpi stat"><span class="k">${a}</span><span class="v">${b}</span></div>`).join('');
     $('quoteParts').innerHTML = q.lines.map(l => `<tr>
       <td class="l"><i class="swatch" style="background:${partColor(l.i)}"></i>${letter(l.i)} ${esc(l.name)}</td>
-      <td>${l.qty}</td><td>${fmt(l.mach, 1)}</td><td>${money(l.unit)}</td><td><strong>${money(l.pricePart)}</strong></td><td>${money(l.line)}</td></tr>`).join('');
+      <td>${l.qty}</td><td>${fmt(l.mach, 2)}</td><td>${money(l.unit)}</td><td><strong>${money(l.pricePart)}</strong></td><td>${money(l.line)}</td></tr>`).join('');
     const notes = [`Material at ${money(q.price)}/kg.`];
-    if (mixed) notes.push('Material and other costs are shared between parts by area; each part carries its own machine time.');
+    notes.push(`Machine time ${fmt(q.machSheet, 1)} min per sheet × ${q.chosen.sheets} sheets, split equally over ${r.qty} parts.`);
+    if (mixed) notes.push('Material and other costs are shared between parts by area.');
     notes.push('Leftover from the last sheet is counted as scrap.');
     $('quoteNote').textContent = notes.join(' ');
   }
@@ -1205,7 +1213,7 @@
         return `- ${p.name || 'Part ' + letter(l.i)}: ${l.qty} × ${fmt(p.L, 0)} × ${fmt(p.W, 0)} mm at ${money(l.pricePart)} each = ${money(l.line)}`;
       }),
       `Material: ${q.chosen.sheets} sheet(s) ${fmt(q.chosen.L, 0)} × ${fmt(q.chosen.W, 0)} mm, yield ${fmt(q.chosen.y)}%, ${money(q.chosen.mat)}`,
-      `Machine: ${fmt(q.cutMin, 0)} min, ${money(q.machine)}`,
+      `Machine: ${q.chosen.sheets} sheets × ${fmt(q.machSheet, 1)} min = ${fmt(q.cutMin, 0)} min, ${money(q.machine)}`,
       q.labourMode === 'part' ? `Labour: ${r.qty} parts × ${money(settings.labourPerPart)} = ${money(q.labour)}` : `Labour: ${fmt(q.cutMin + q.setup, 0)} min incl. ${fmt(q.setup, 0)} min setup, ${money(q.labour)}`,
       q.other ? `Other: ${money(q.other)}` : null,
       `Total cost: ${money(q.total)}`,
@@ -1521,7 +1529,7 @@
   fillSelects();
   renderSettings();
   $('qLabourMode').value = settings.labourMode;
-  setPartRows('qPartRows', 'q', [{ name: '', L: 500, W: 300, qty: 100, mach: 0.5 }]);
+  setPartRows('qPartRows', 'q', [{ name: '', L: 500, W: 300, qty: 100 }]);
   resetForm();
   render();
   renderQuote();
