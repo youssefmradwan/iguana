@@ -137,7 +137,12 @@
   #chart svg { width: 100%; height: auto; display: block; }
   #chart text { fill: var(--muted); font-size: 11px; }
   .note { font-size: .8rem; color: var(--muted); margin-top: 8px; }
-  .hidden { display: none; }
+  .hidden, [hidden] { display: none !important; }
+  .toast { position: fixed; left: 50%; bottom: calc(20px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); max-width: calc(100% - 32px); background: var(--text); color: var(--bg); padding: 10px 16px; border-radius: 8px; font-size: .9rem; box-shadow: 0 4px 16px rgba(0,0,0,.2); z-index: 10; }
+  .toast.err { background: var(--bad); color: #fff; }
+  button.armed { background: var(--bad); color: #fff; border-color: var(--bad); }
+  .export-panel { margin-top: 14px; display: flex; flex-direction: column; gap: 8px; }
+  .export-panel textarea { font: 12px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace; min-height: 160px; }
   #layout svg { width: 100%; height: auto; max-height: 70vh; display: block; }
   .layout-head { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between; margin-bottom: 10px; }
   .layout-head .muted { color: var(--muted); font-size: .9rem; }
@@ -290,8 +295,19 @@
       <input type="file" id="importFile" accept=".json,application/json" class="hidden">
       <button type="button" id="clearAll" class="link danger">Delete all</button>
     </div>
+    <div class="export-panel" id="exportPanel" hidden>
+      <strong id="exportTitle"></strong>
+      <textarea id="exportText" readonly></textarea>
+      <div class="actions">
+        <button type="button" class="primary" id="exportCopy">Copy</button>
+        <button type="button" id="exportDownload">Download file</button>
+        <button type="button" id="exportClose">Close</button>
+        <span class="note" style="margin:0">If Download does nothing, use Copy and paste into a spreadsheet or notes.</span>
+      </div>
+    </div>
   </section>
 </main>
+<div class="toast" id="toast" role="status" hidden></div>
 
 <script>
 (() => {
@@ -301,6 +317,31 @@
   const fmt = (n, d = 1) => Number.isFinite(n) ? n.toLocaleString(undefined, { minimumFractionDigits: d, maximumFractionDigits: d }) : '–';
   const num = id => parseFloat($(id).value);
 
+  let toastTimer;
+  function notify(msg, isErr) {
+    const t = $('toast');
+    t.textContent = msg;
+    t.classList.toggle('err', !!isErr);
+    t.hidden = false;
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => { t.hidden = true; }, 3500);
+  }
+
+  // Two-tap confirmation in place of confirm(), which embedded viewers block.
+  function confirmTap(btn, prompt, action) {
+    if (btn.dataset.armed) { action(); return; }
+    const label = btn.textContent;
+    btn.dataset.armed = '1';
+    btn.classList.add('armed');
+    btn.textContent = prompt;
+    setTimeout(() => {
+      if (!btn.isConnected) return;
+      delete btn.dataset.armed;
+      btn.classList.remove('armed');
+      btn.textContent = label;
+    }, 3000);
+  }
+
   let entries = load();
   let sort = { k: 'date', dir: -1 };
 
@@ -308,7 +349,7 @@
     try { return JSON.parse(localStorage.getItem(STORE_KEY)) || []; } catch { return []; }
   }
   function save() {
-    try { localStorage.setItem(STORE_KEY, JSON.stringify(entries)); } catch { alert('Could not save to browser storage. Export a backup to keep your data.'); }
+    try { localStorage.setItem(STORE_KEY, JSON.stringify(entries)); } catch { notify('Could not save in this browser. Export a backup to keep your data.', true); }
   }
 
   // Guillotine nest of identical rectangles: place a grid, then recursively fill the
@@ -612,7 +653,7 @@
   $('entryForm').addEventListener('submit', ev => {
     ev.preventDefault();
     const e = readForm();
-    if (!(e.partArea > 0) && !(e.partL > 0 && e.partW > 0)) { alert('Enter part length and width, or a net area per part.'); return; }
+    if (!(e.partArea > 0) && !(e.partL > 0 && e.partW > 0)) { notify('Enter part length and width, or a net area per part.', true); return; }
     const editId = $('editId').value;
     if (editId) {
       const i = entries.findIndex(x => String(x.id) === editId);
@@ -642,10 +683,13 @@
       $('cancelEdit').classList.remove('hidden');
       updatePreview();
       $('formTitle').scrollIntoView({ behavior: 'smooth' });
-    } else if (del && confirm('Delete this entry?')) {
-      entries = entries.filter(x => String(x.id) !== del);
-      save();
-      render();
+    } else if (del) {
+      confirmTap(ev.target, 'Tap to delete', () => {
+        entries = entries.filter(x => String(x.id) !== del);
+        save();
+        render();
+        notify('Entry deleted.');
+      });
     }
   });
 
@@ -655,6 +699,7 @@
   }));
   ['fSearch', 'fGrade', 'fThick', 'fFrom', 'fTo'].forEach(id => $(id).addEventListener('input', render));
 
+  let exportFile = null;
   function download(name, text, type) {
     const a = document.createElement('a');
     a.href = URL.createObjectURL(new Blob([text], { type }));
@@ -662,14 +707,28 @@
     a.click();
     setTimeout(() => URL.revokeObjectURL(a.href), 1000);
   }
+  function showExport(title, name, text, type) {
+    exportFile = { name, text, type };
+    $('exportTitle').textContent = title;
+    $('exportText').value = text;
+    $('exportPanel').hidden = false;
+    $('exportPanel').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+  $('exportDownload').addEventListener('click', () => exportFile && download(exportFile.name, exportFile.text, exportFile.type));
+  $('exportClose').addEventListener('click', () => { $('exportPanel').hidden = true; });
+  $('exportCopy').addEventListener('click', () => {
+    const fallback = () => { $('exportText').select(); notify('Text selected. Copy it with your device\'s copy command.'); };
+    if (navigator.clipboard?.writeText) navigator.clipboard.writeText($('exportText').value).then(() => notify('Copied.'), fallback);
+    else fallback();
+  });
 
   $('exportCsv').addEventListener('click', () => {
     const cols = ['date','job','part','operator','grade','finish','thickness','density','sheetL','sheetW','sheets','partL','partW','partAreaUsed','goodParts','rejects','offcut','kerf','margin','sheetKg','partKg','scrapKg','yieldPct','effPct','perSheet','nestPct','notes'];
     const cell = v => typeof v === 'number' ? (Number.isFinite(v) ? +v.toFixed(3) : '') : `"${String(v ?? '').replace(/"/g, '""')}"`;
     const csv = [cols.join(','), ...filtered().map(e => cols.map(c => cell(e[c])).join(','))].join('\n');
-    download(`sheet-yield-${new Date().toISOString().slice(0, 10)}.csv`, csv, 'text/csv');
+    showExport(`CSV of ${filtered().length} filtered entries`, `sheet-yield-${new Date().toISOString().slice(0, 10)}.csv`, csv, 'text/csv');
   });
-  $('exportJson').addEventListener('click', () => download('sheet-yield-backup.json', JSON.stringify(entries, null, 2), 'application/json'));
+  $('exportJson').addEventListener('click', () => showExport(`Backup of all ${entries.length} entries (JSON)`, 'sheet-yield-backup.json', JSON.stringify(entries, null, 2), 'application/json'));
   $('importBtn').addEventListener('click', () => $('importFile').click());
   $('importFile').addEventListener('change', async () => {
     const f = $('importFile').files[0];
@@ -682,18 +741,20 @@
       entries.push(...added);
       save();
       render();
-      alert(`Imported ${added.length} entr${added.length === 1 ? 'y' : 'ies'}.`);
+      notify(`Imported ${added.length} entr${added.length === 1 ? 'y' : 'ies'}.`);
     } catch (err) {
-      alert('Could not read that file: ' + err.message);
+      notify('Could not read that file. Choose a backup .json exported from this page.', true);
     }
     $('importFile').value = '';
   });
-  $('clearAll').addEventListener('click', () => {
-    if (entries.length && confirm('Delete ALL entries? Export a backup first if you need them.')) {
+  $('clearAll').addEventListener('click', ev => {
+    if (!entries.length) return;
+    confirmTap(ev.currentTarget, `Tap again to delete all ${entries.length}`, () => {
       entries = [];
       save();
       render();
-    }
+      notify('All entries deleted.');
+    });
   });
 
   resetForm();
