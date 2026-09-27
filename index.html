@@ -635,21 +635,21 @@
   const nestCache = new Map();
   // parts: [{L, W, good, rejects}]. Returns { fits, mode, need, ... } or null when inputs are incomplete.
   function nestLayout(SL, SW, kerf, margin, parts) {
-    const key = JSON.stringify([SL, SW, kerf, margin, parts.map(p => [p.L, p.W, p.good || 0, p.rejects || 0])]);
+    const key = JSON.stringify([SL, SW, kerf, margin, parts.map(p => [p.idx, p.L, p.W, p.good || 0, p.rejects || 0])]);
     if (nestCache.has(key)) return nestCache.get(key);
     let res = null;
     if (SL > 0 && SW > 0 && parts.length && parts.every(p => p.L > 0 && p.W > 0)) {
       const total = parts.reduce((s, p) => s + (p.good || 0) + (p.rejects || 0), 0);
       if (parts.length === 1) {
         const plan = nestPlan(SL, SW, parts[0].L, parts[0].W, kerf, margin);
-        res = plan && plan.n > 0 ? { fits: true, mode: 'grid', plan, cap: plan.n, need: Math.ceil(total / plan.n) } : { fits: false };
+        res = plan && plan.n > 0 ? { fits: true, mode: 'grid', idx: parts[0].idx ?? 0, plan, cap: plan.n, need: Math.ceil(total / plan.n) } : { fits: false };
       } else if (total > MIXED_LIMIT) {
         res = { fits: true, mode: 'mixed', tooMany: true, need: NaN };
       } else {
         const items = [];
         parts.forEach((p, t) => {
           const g = p.good || 0, n = g + (p.rejects || 0);
-          for (let i = 0; i < n; i++) items.push({ w: p.L, h: p.W, type: t, status: i < g ? 'good' : 'rej' });
+          for (let i = 0; i < n; i++) items.push({ w: p.L, h: p.W, type: p.idx ?? t, status: i < g ? 'good' : 'rej' });
         });
         const sheets = mixedNest(SL, SW, items, kerf, margin);
         res = sheets ? { fits: true, mode: 'mixed', sheets, need: sheets.length } : { fits: false };
@@ -676,7 +676,10 @@
     const rejectKg = rejArea * kgPerMm2;
     const scrapKg = Math.max(0, sheetKg - partKg);
     const yieldPct = totalArea > 0 ? goodArea / totalArea * 100 : NaN;
-    const nest = nestLayout(e.sheetL, e.sheetW, e.kerf || 0, e.margin || 0, parts);
+    // Parts still missing a length or width are left out of the layout until they're filled in.
+    const sized = parts.map((p, idx) => ({ ...p, idx })).filter(p => p.L > 0 && p.W > 0);
+    const unsized = parts.map((p, i) => i).filter(i => !(parts[i].L > 0 && parts[i].W > 0));
+    const nest = sized.length ? nestLayout(e.sheetL, e.sheetW, e.kerf || 0, e.margin || 0, sized) : null;
     const minSheets = nest && nest.fits && Number.isFinite(nest.need) ? nest.need : NaN;
     const perSheet = nest && nest.mode === 'grid' ? nest.cap : NaN;
     const bestPct = minSheets > 0 ? goodArea / (minSheets * sheetArea) * 100 : NaN;
@@ -715,7 +718,7 @@
       return { i, name: p.name, good: p.good || 0, unit, price, sell: p.sell || 0, margin: p.sell > 0 ? (p.sell - unit) / p.sell * 100 : NaN };
     });
 
-    return { ...e, parts, good, rejects, goodArea, partNames: parts.map(p => p.name).filter(Boolean).join(', '),
+    return { ...e, parts, unsized, good, rejects, goodArea, partNames: parts.map(p => p.name).filter(Boolean).join(', '),
       partsText: parts.map(p => `${p.name || 'part'} ${p.L}×${p.W} ${p.good || 0}${p.rejects ? '+' + p.rejects + 'rej' : ''}`).join('; '),
       sheetKg, partKg, rejectKg, scrapKg, yieldPct, nest, minSheets, perSheet, bestPct,
       matPrice, machineRateMin, labourRateMin, labourMode, labourPerPart, marginPct,
@@ -893,7 +896,7 @@
       : 'Live preview of the entry form';
     $('layoutBack').classList.toggle('hidden', !layoutEntryId);
     const nest = e.nest;
-    if (!nest) return layoutMessage('Enter the sheet size and each part\'s length and width to see the layout.');
+    if (!nest) return layoutMessage('Enter the sheet size and a part\'s length and width to see the layout.');
     if (!nest.fits) return layoutMessage('A part is larger than the usable sheet area (after edge margin). Check its size or the sheet size.');
     if (nest.tooMany) return layoutMessage(`Too many mixed parts to draw live (over ${MIXED_LIMIT.toLocaleString()}). Split the job into smaller entries to see a layout.`);
 
@@ -902,8 +905,8 @@
     layoutSheet = Math.max(0, Math.min(layoutSheet, shown - 1));
     let rects;
     if (nest.mode === 'grid') {
-      const cap = nest.cap, G = parts[0].good || 0, R = parts[0].rejects || 0, start = layoutSheet * cap;
-      rects = nest.plan.rects.map((r, i) => ({ ...r, type: 0, status: start + i < G ? 'good' : start + i < G + R ? 'rej' : 'empty', label: start + i + 1 }));
+      const gp = parts[nest.idx], cap = nest.cap, G = gp.good || 0, R = gp.rejects || 0, start = layoutSheet * cap;
+      rects = nest.plan.rects.map((r, i) => ({ ...r, type: nest.idx, status: start + i < G ? 'good' : start + i < G + R ? 'rej' : 'empty', label: start + i + 1 }));
     } else {
       rects = (nest.sheets[layoutSheet] || []).map(r => ({ ...r, label: letter(r.type) }));
     }
@@ -933,7 +936,7 @@
       ? `<button type="button" data-sheet="-1" ${layoutSheet === 0 ? 'disabled' : ''}>‹</button><span>Sheet ${layoutSheet + 1} of ${shown}</span><button type="button" data-sheet="1" ${layoutSheet === shown - 1 ? 'disabled' : ''}>›</button>`
       : '';
 
-    const legend = parts.map((p, i) => `<span><i style="background:${partColor(i)}"></i>${letter(i)}${p.name ? ' ' + esc(p.name) : ''} (${fmt(p.L, 0)} × ${fmt(p.W, 0)})</span>`);
+    const legend = parts.map((p, i) => `<span><i style="background:${partColor(i)}"></i>${letter(i)}${p.name ? ' ' + esc(p.name) : ''} (${p.L > 0 && p.W > 0 ? `${fmt(p.L, 0)} × ${fmt(p.W, 0)}` : 'size needed'})</span>`);
     legend.push('<span><i style="background:var(--reject)"></i>Rejected</span>');
     if (nest.mode === 'grid') legend.push('<span><i style="border:1px dashed var(--muted)"></i>Unused slot</span>');
     legend.push('<span><i style="background:var(--sheet);border:1px solid var(--border)"></i>Scrap</span>');
@@ -953,6 +956,7 @@
     $('layoutInfo').innerHTML = info.map(statHTML).join('');
 
     const notes = [];
+    if (e.unsized.length) notes.push(`Part ${e.unsized.map(letter).join(', ')} ${e.unsized.length === 1 ? 'is' : 'are'} not on the sheet yet: enter length and width to add ${e.unsized.length === 1 ? 'it' : 'them'}.`);
     if (parts.some(p => p.area > 0)) notes.push('Parts with a net area are drawn as their length × width rectangle; yield uses the net area.');
     if (e.sheets < nest.need) notes.push(`This layout needs ${nest.need} sheets but the entry used ${e.sheets}, so the actual nest was tighter than this layout.`);
     if (e.sheets > nest.need) notes.push(`The parts fit on ${nest.need} sheet${nest.need === 1 ? '' : 's'}; the remaining sheet${e.sheets - nest.need === 1 ? ' is' : 's are'} shown empty.`);
@@ -1103,15 +1107,16 @@
     const g = $('qGrade').value, f = $('qFinish').value, t = num('qThick');
     const parts = readPartRows('qPartRows', 'q');
     const kerf = num('qKerf') || 0, margin = num('qMargin') || 0;
-    const qty = parts.reduce((s, p) => s + p.qty, 0);
-    const areaTotal = parts.reduce((s, p) => s + partArea(p) * p.qty, 0);
+    const usable = p => p.L > 0 && p.W > 0 && p.qty > 0;
+    const qty = parts.filter(usable).reduce((s, p) => s + p.qty, 0);
+    const areaTotal = parts.filter(usable).reduce((s, p) => s + partArea(p) * p.qty, 0);
     const price = autoMatPrice(g, f);
     const kgPerMm2 = t * gradeInfo(g).density / 1e6;
-    const nparts = parts.map(p => ({ L: p.L, W: p.W, good: p.qty, rejects: 0 }));
+    const nparts = parts.map((p, idx) => ({ idx, L: p.L, W: p.W, good: p.qty, rejects: 0 })).filter(p => p.L > 0 && p.W > 0 && p.good > 0);
     const sizes = SHEET_SIZES.map(([L, W, lab]) => ({ L, W, lab }));
     if (num('qCustL') > 0 && num('qCustW') > 0) sizes.push({ L: num('qCustL'), W: num('qCustW'), lab: 'custom' });
     const options = sizes.map(sz => {
-      const nest = qty > 0 ? nestLayout(sz.L, sz.W, kerf, margin, nparts) : null;
+      const nest = nparts.length ? nestLayout(sz.L, sz.W, kerf, margin, nparts) : null;
       const ok = nest && nest.fits && Number.isFinite(nest.need) && nest.need > 0;
       const sheets = ok ? nest.need : NaN;
       const steelKg = sheets * sz.L * sz.W * kgPerMm2;
@@ -1126,14 +1131,14 @@
 
     const labourMode = $('qLabourMode').value;
     const setup = labourMode === 'part' ? 0 : fin(num('qSetup')), other = fin(num('qOther'));
-    const cutMin = parts.reduce((s, p) => s + p.qty * p.mach, 0);
+    const cutMin = parts.filter(usable).reduce((s, p) => s + p.qty * p.mach, 0);
     let q = null;
     if (chosen && qty > 0) {
       const machine = cutMin * settings.machineRateMin;
       const labour = labourMode === 'part' ? settings.labourPerPart * qty : (cutMin + setup) * settings.labourRateMin;
       const total = chosen.mat + machine + labour + other;
       const m = settings.marginPct;
-      const lines = parts.map((p, i) => {
+      const lines = parts.map((p, i) => ({ p, i })).filter(({ p }) => usable(p)).map(({ p, i }) => {
         const share = areaTotal > 0 ? partArea(p) * p.qty / areaTotal : 0;
         const ownMach = p.qty * p.mach;
         const alloc = (chosen.mat + other) * share + ownMach * settings.machineRateMin
@@ -1370,7 +1375,7 @@
     $('sheetL').value = q.chosen.L; $('sheetW').value = q.chosen.W; syncSheetPreset();
     $('sheets').value = q.chosen.sheets;
     $('kerf').value = r.kerf; $('margin').value = r.margin;
-    setPartRows('partRows', 'e', r.parts.map((p, i) => ({ name: p.name, L: p.L, W: p.W, area: p.area, good: p.qty, rejects: 0, sell: +fin(q.lines[i].pricePart).toFixed(2) })));
+    setPartRows('partRows', 'e', q.lines.map(l => { const p = r.parts[l.i]; return { name: p.name, L: p.L, W: p.W, area: p.area, good: p.qty, rejects: 0, sell: +fin(l.pricePart).toFixed(2) }; }));
     $('machineMin').value = +q.cutMin.toFixed(1);
     $('labourMode').value = q.labourMode;
     $('labourMin').value = +(q.cutMin + q.setup).toFixed(1);
@@ -1385,6 +1390,8 @@
   $('entryForm').addEventListener('submit', ev => {
     ev.preventDefault();
     const e = readForm();
+    e.parts = e.parts.filter(p => p.name || p.L || p.W || p.area || p.good || p.rejects || p.sell);
+    if (!e.parts.length) { notify('Enter at least one part.', true); return; }
     const bad = e.parts.findIndex(p => !(p.L > 0 && p.W > 0));
     if (bad >= 0) { notify(`Enter a length and width for part ${letter(bad)}.`, true); return; }
     if (!e.parts.some(p => p.good > 0)) { notify('Enter how many good parts were produced.', true); return; }
