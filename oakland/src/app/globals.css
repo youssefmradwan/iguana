@@ -1,0 +1,222 @@
+@import "tailwindcss";
+
+/*
+ * Design tokens. Change the palette or fonts here and the whole site follows.
+ * Contrast notes: `stone` on `ink` ≈ 8.6:1, `umber` on `cream` ≈ 7:1,
+ * `brass` on `ink` ≈ 8:1, `brass-deep` on `cream` ≈ 5:1 — all pass WCAG AA.
+ */
+@theme {
+  --color-ink: #13110f;
+  --color-charcoal: #1c1916;
+  --color-walnut: #3b2a1f;
+  --color-walnut-soft: #5a4131;
+  --color-cream: #f3eee6;
+  --color-parchment: #e7dfd2;
+  --color-stone: #b9ad9c;
+  --color-umber: #5b4f43;
+  --color-brass: #c4a56e;
+  --color-brass-deep: #7a5f30;
+
+  --font-serif: "Cormorant Garamond Variable", "Cormorant Garamond", Georgia, "Times New Roman", serif;
+  --font-sans: "Manrope Variable", "Manrope", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+
+  --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@layer base {
+  html {
+    background-color: var(--color-ink);
+    color: var(--color-cream);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    scroll-behavior: smooth;
+  }
+
+  body {
+    font-family: var(--font-sans);
+    background-color: var(--color-ink);
+    min-height: 100vh;
+  }
+
+  ::selection {
+    background: var(--color-brass);
+    color: var(--color-ink);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-brass);
+    outline-offset: 3px;
+  }
+
+  .bg-cream :focus-visible,
+  .bg-parchment :focus-visible {
+    outline-color: var(--color-brass-deep);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+@layer components {
+  /* Small uppercase label above headings */
+  .eyebrow {
+    font-family: var(--font-sans);
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+  }
+
+  /* Display headings: elegant serif with generous tracking */
+  .display {
+    font-family: var(--font-serif);
+    font-weight: 400;
+    letter-spacing: 0.02em;
+    line-height: 1.05;
+  }
+
+  .wordmark {
+    font-family: var(--font-serif);
+    font-weight: 500;
+    letter-spacing: 0.32em;
+    text-transform: uppercase;
+  }
+
+  /* Understated text link with a sliding underline */
+  .link-line {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding-bottom: 0.35rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+  }
+  .link-line::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    height: 1px;
+    width: 100%;
+    background: currentColor;
+    opacity: 0.4;
+    transform-origin: left;
+    transition: opacity 0.4s var(--ease-out-soft);
+  }
+  .link-line:hover::after {
+    opacity: 1;
+  }
+  .link-line .arrow {
+    transition: transform 0.5s var(--ease-out-soft);
+  }
+  .link-line:hover .arrow {
+    transform: translateX(6px);
+  }
+
+  /*
+   * Placeholder surface shown behind every photo (and on its own if a photo
+   * fails to load): a quiet walnut tone with a faint grain.
+   */
+  .wood-placeholder {
+    background-color: var(--color-walnut);
+    background-image:
+      radial-gradient(120% 80% at 20% 10%, rgba(196, 165, 110, 0.12), transparent 60%),
+      repeating-linear-gradient(
+        172deg,
+        rgba(0, 0, 0, 0) 0px,
+        rgba(0, 0, 0, 0) 7px,
+        rgba(0, 0, 0, 0.07) 8px,
+        rgba(0, 0, 0, 0) 11px,
+        rgba(255, 255, 255, 0.025) 19px,
+        rgba(0, 0, 0, 0) 23px
+      ),
+      linear-gradient(160deg, var(--color-walnut-soft), var(--color-walnut) 55%, #2a1e16);
+  }
+}
+
+/*
+ * Scroll reveal. Only hides content when JS is running (html.js is set by an
+ * inline script in layout.tsx), so the site is fully readable without JS.
+ */
+html.js [data-reveal] {
+  opacity: 0;
+  transform: translateY(28px);
+  transition:
+    opacity 1.2s var(--ease-out-soft),
+    transform 1.2s var(--ease-out-soft);
+  transition-delay: var(--reveal-delay, 0ms);
+}
+html.js [data-reveal].is-visible {
+  opacity: 1;
+  transform: none;
+}
+
+@keyframes hero-zoom {
+  from {
+    transform: scale(1.08);
+  }
+  to {
+    transform: scale(1);
+  }
+}
+.animate-hero-zoom {
+  animation: hero-zoom 2.8s var(--ease-out-soft) both;
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.animate-fade-up {
+  animation: fade-up 1.4s var(--ease-out-soft) both;
+}
+
+@keyframes scroll-cue {
+  0% {
+    transform: scaleY(0);
+    transform-origin: top;
+  }
+  45% {
+    transform: scaleY(1);
+    transform-origin: top;
+  }
+  55% {
+    transform: scaleY(1);
+    transform-origin: bottom;
+  }
+  100% {
+    transform: scaleY(0);
+    transform-origin: bottom;
+  }
+}
+.animate-scroll-cue {
+  animation: scroll-cue 2.6s var(--ease-out-soft) infinite;
+}
+
+dialog::backdrop {
+  background: rgba(19, 17, 15, 0.92);
+}
+
+/* Photos fade in once loaded (only when JS can reveal them again). */
+html.js .photo-img:not(.is-loaded) {
+  opacity: 0;
+}
