@@ -7,7 +7,7 @@ import { photos } from "@/content/images";
 import { site } from "@/content/site";
 import { pageMetadata } from "@/lib/seo";
 
-const contactImage = photos["doors-01"];
+const contactImage = photos["excel-01"];
 
 export const metadata = pageMetadata({
   title: "Contact",

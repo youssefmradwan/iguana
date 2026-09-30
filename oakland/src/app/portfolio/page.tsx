@@ -7,7 +7,7 @@ import { pageMetadata } from "@/lib/seo";
 export const metadata = pageMetadata({
   title: "Projects",
   description:
-    "Selected Oakland woodwork projects: Luxoft, Dorra, Excel Systems and Qorrect head offices, National Bank of Egypt, private residences and villas, Holiday Inn Cairo Maadi and Lexie’s.",
+    "Selected Oakland woodwork projects: Luxoft, Dorra, Excel Systems and Qorrect head offices, National Bank of Egypt, private residences in Heliopolis and Sheikh Zayed, and Holiday Inn Cairo Maadi.",
   path: "/portfolio/",
   image: projects[0].images[0],
 });

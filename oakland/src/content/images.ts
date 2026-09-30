@@ -16,11 +16,6 @@ function photo(name: string, width: number, height: number, alt: string): Image 
 export const photos = {
   "brand-01": photo("brand-01", 1230, 1161, "Black-and-white close-up of a craftsman's hands shaping timber at a machine"),
   "doors-01": photo("doors-01", 1303, 1620, "Tall timber-slatted pivot door standing open in a stone-clad entrance"),
-  "doors-02": photo("doors-02", 1298, 1620, "Vertical timber-slat entrance door beside a grey stone wall"),
-  "doors-03": photo("doors-03", 1298, 1620, "Honey-toned timber entrance door framed by plants on a terracotta façade"),
-  "doors-04": photo("doors-04", 1298, 1620, "Timber entrance door beneath a slatted timber canopy"),
-  "doors-05": photo("doors-05", 1161, 1620, "Horizontal-plank timber entrance door beside tropical planting"),
-  "doors-06": photo("doors-06", 1219, 1620, "Close view of a horizontal-plank walnut door and its frame"),
   "dorra-01": photo("dorra-01", 1037, 908, "Reception lounge with a circular slatted-timber ceiling feature and walnut wall panels"),
   "dorra-02": photo("dorra-02", 1043, 909, "Walnut reception desk with a marble end panel"),
   "dorra-03": photo("dorra-03", 1037, 895, "Waiting area with walnut wall cladding and a grey sofa"),
@@ -36,8 +31,6 @@ export const photos = {
   "heliopolis-06": photo("heliopolis-06", 684, 1024, "Walnut wardrobe with glass doors and internal drawers"),
   "holidayinn-01": photo("holidayinn-01", 1152, 774, "Restaurant terrace with a timber-slatted ceiling overlooking the water"),
   "holidayinn-02": photo("holidayinn-02", 1133, 685, "Rooftop pool terrace at dusk"),
-  "lexies-01": photo("lexies-01", 1290, 1286, "Restaurant with faceted timber and brass wall panels above dining tables"),
-  "lexies-02": photo("lexies-02", 1262, 1286, "Marble fireplace wall framed by faceted timber panels"),
   "luxoft-01": photo("luxoft-01", 1179, 785, "Reception with a white desk, Luxoft signage and pale timber flooring"),
   "luxoft-02": photo("luxoft-02", 1920, 1280, "Reception lounge with sofas and illuminated wall graphics"),
   "luxoft-03": photo("luxoft-03", 944, 621, "Corridor with teal cabinetry and a planted breakout area"),
@@ -72,9 +65,6 @@ export const photos = {
 export type PhotoName = keyof typeof photos;
 
 export const logo = {
-  /** Full logo (mark + wordmark) on the brand walnut background. */
-  full: "/brand/oakland-logo.jpg",
-  /** Transparent cream PNGs, for placing over photos or dark backgrounds. */
-  mark: "/brand/oakland-mark.png",
+  /** Transparent cream wordmark, for placing over photos or dark backgrounds. */
   wordmark: "/brand/oakland-wordmark.png",
 };

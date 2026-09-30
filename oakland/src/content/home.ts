@@ -44,6 +44,6 @@ export const home = {
     title: "Let’s talk about your next project",
     body: "Tell us about your space and what you have in mind, or call us directly.",
     link: { href: "/contact/", label: "Start a project" },
-    image: photos["lexies-01"],
+    image: photos["excel-03"],
   },
 };

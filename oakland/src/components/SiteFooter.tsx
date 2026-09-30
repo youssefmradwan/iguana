@@ -10,9 +10,7 @@ export default function SiteFooter() {
       <Container className="grid gap-14 py-20 sm:py-24 md:grid-cols-12">
         <div className="md:col-span-5">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={logo.mark} alt="" width={448} height={448} className="h-16 w-16" loading="lazy" />
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={logo.wordmark} alt={site.name} width={1088} height={264} className="mt-6 h-8 w-auto" loading="lazy" />
+          <img src={logo.wordmark} alt={site.name} width={1054} height={172} className="h-7 w-auto" loading="lazy" />
           <p className="mt-6 max-w-sm font-serif text-xl leading-snug text-stone italic">{site.tagline}</p>
         </div>
 

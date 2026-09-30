@@ -90,12 +90,12 @@ export default function AboutPage() {
           <Reveal className="md:col-span-5">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src={about.logo.full}
+              src={about.logo.wordmark}
               alt={`${site.name} logo`}
-              width={1137}
-              height={851}
+              width={1054}
+              height={172}
               loading="lazy"
-              className="w-full max-w-sm"
+              className="h-auto w-full max-w-sm"
             />
           </Reveal>
           <Reveal delay={150} className="md:col-span-6 md:col-start-7">

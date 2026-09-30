@@ -22,7 +22,7 @@ const jsonLd = {
   name: site.name,
   description: site.description,
   url: site.url,
-  logo: new URL(logo.full, site.url).toString(),
+  logo: new URL(logo.wordmark, site.url).toString(),
   telephone: site.contact.people.map((p) => p.phoneHref.replace("tel:", "")),
   address: {
     "@type": "PostalAddress",
@@ -45,26 +45,17 @@ export default function HomePage() {
         <Photo image={home.hero.image} priority className="absolute! inset-0" imgClassName="animate-hero-zoom" />
         <div aria-hidden="true" className="absolute inset-0 bg-gradient-to-t from-ink via-ink/55 to-ink/35" />
         <Container className="relative pb-20 sm:pb-28">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={logo.mark}
-            alt=""
-            width={448}
-            height={448}
-            className="animate-fade-up h-16 w-16 sm:h-20 sm:w-20"
-            style={{ animationDelay: "150ms" }}
-          />
           <h1
             id="hero-title"
-            className="animate-fade-up mt-8"
+            className="animate-fade-up"
             style={{ animationDelay: "300ms" }}
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={logo.wordmark}
               alt={site.name}
-              width={1088}
-              height={264}
+              width={1054}
+              height={172}
               className="h-auto w-[min(88vw,760px)]"
             />
           </h1>

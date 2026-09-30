@@ -42,7 +42,7 @@ src/
 public/
   images/projects/     full-size project photos (max 1920px)
   images/projects/sm/  900px copies, served to phones automatically
-  brand/               logo: full JPG, plus transparent cream mark & wordmark PNGs
+  brand/               logo: transparent cream OAKLAND wordmark PNG
 ```
 
 Layout components never hard-code copy. To change wording, edit the files in `src/content/`.
@@ -57,7 +57,7 @@ Layout components never hard-code copy. To change wording, edit the files in `sr
 Project photos are shown uncropped at their own proportions in the portfolio, the project viewer and the home page's recent work. Only the full-width backgrounds (page heroes and banners) and the sector and service tiles are cropped.
 
 ### Logo
-The header, hero and footer use the transparent PNGs in `public/brand/`, which were cut from `oakland-logo.jpg`. If you have the logo as a vector (SVG or PDF), swap those files for sharper results. The favicon is `src/app/icon.png`.
+The header, hero, footer and About page use the transparent wordmark in `public/brand/oakland-wordmark.png`, cut from the company logo without the wood-grain mark or ™. If you have the wordmark as a vector (SVG or PDF), swap it in for sharper results. The favicon (`src/app/icon.png`) is the wordmark's "O" on walnut.
 
 ### Still to confirm before launch
 Search `src/content/` for **PLACEHOLDER**:

@@ -68,7 +68,7 @@ export default function SiteHeader() {
       <div className="mx-auto flex w-full max-w-[1440px] items-center justify-between px-6 sm:px-10 lg:px-16">
         <Link href="/" className="relative z-10 block" aria-label={`${site.name} — home`}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={logo.wordmark} alt="" width={1088} height={264} className="h-6 w-auto sm:h-7" />
+          <img src={logo.wordmark} alt="" width={1054} height={172} className="h-5 w-auto sm:h-6" />
         </Link>
 
         <nav aria-label="Main" className="hidden md:block">

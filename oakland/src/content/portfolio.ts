@@ -97,6 +97,7 @@ export const projects: Project[] = [
     client: "Private client",
     location: "Heliopolis",
     images: [...range("heliopolis", 6), photos["section-02"]],
+    featured: true,
   },
   {
     id: "zayed",
@@ -107,15 +108,6 @@ export const projects: Project[] = [
     images: range("zayed", 3),
   },
   {
-    id: "doors",
-    title: "Residential Villa, Entrance Doors",
-    sector: "Residential",
-    client: "Private client",
-    scope: "Pivot and wooden doors",
-    images: range("doors", 6),
-    featured: true,
-  },
-  {
     id: "holidayinn",
     title: "Holiday Inn Cairo Maadi, Restaurant",
     sector: "Hospitality",
@@ -123,15 +115,6 @@ export const projects: Project[] = [
     location: "Maadi, Cairo",
     images: [...range("holidayinn", 2), photos["section-03"]],
     featured: true,
-  },
-  {
-    id: "lexies",
-    title: "Lexie’s, Dusit Thani LakeView",
-    sector: "Hospitality",
-    client: "Lexie’s",
-    location: "New Cairo",
-    scope: "Woodwork",
-    images: range("lexies", 2),
   },
 ];
 
