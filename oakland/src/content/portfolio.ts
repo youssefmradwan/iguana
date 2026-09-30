@@ -23,7 +23,7 @@ export const portfolioIntro = {
   eyebrow: "Projects",
   title: "Selected work",
   lede:
-    "Woodwork for head offices, banking halls, private homes, hotel lobbies and restaurants across Greater Cairo and the North Coast.",
+    "Woodwork for head offices, banking halls, private homes, restaurants and hotels across Greater Cairo.",
 };
 
 export const sectors: { name: Sector; summary: string; cover: Image }[] = [
@@ -39,7 +39,7 @@ export const sectors: { name: Sector; summary: string; cover: Image }[] = [
   },
   {
     name: "Hospitality",
-    summary: "Feature woodwork for hotel lobbies, restaurants and poolside spaces.",
+    summary: "Feature woodwork for hotels, restaurants and poolside spaces.",
     cover: photos["section-03"],
   },
 ];
@@ -107,21 +107,13 @@ export const projects: Project[] = [
     images: range("zayed", 3),
   },
   {
-    id: "marina",
-    title: "Marina Coastal Villa",
-    sector: "Residential",
-    client: "ARCADE",
-    location: "Marina, North Coast",
-    images: range("marina", 9),
-    featured: true,
-  },
-  {
     id: "doors",
     title: "Residential Villa, Entrance Doors",
     sector: "Residential",
     client: "Private client",
     scope: "Pivot and wooden doors",
     images: range("doors", 6),
+    featured: true,
   },
   {
     id: "holidayinn",
@@ -130,15 +122,6 @@ export const projects: Project[] = [
     client: "ASASS Construction",
     location: "Maadi, Cairo",
     images: [...range("holidayinn", 2), photos["section-03"]],
-  },
-  {
-    id: "dusit",
-    title: "Dusit Thani LakeView, Lobby",
-    sector: "Hospitality",
-    client: "Dusit Thani LakeView",
-    location: "New Cairo",
-    scope: "Woodwork",
-    images: range("dusit", 5),
     featured: true,
   },
   {

@@ -36,7 +36,7 @@ export const services: Service[] = [
       "Feature ceilings & staircases",
       "One-off furniture",
     ],
-    image: photos["dusit-03"],
+    image: photos["zayed-01"],
   },
   {
     slug: "mass-production",
@@ -106,6 +106,6 @@ export const faqs = [
   },
   {
     q: "Where do you work?",
-    a: "Our office is in Katameya Business Complex, Cairo. We have delivered projects across Greater Cairo and on the North Coast.",
+    a: "Our office is in Katameya Business Complex, Cairo, and we deliver projects across Greater Cairo.",
   },
 ];

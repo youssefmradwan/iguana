@@ -14,9 +14,9 @@ export const about = {
     paragraphs: [
       "Oakland is a woodwork company based in Cairo, Egypt. We make bespoke joinery and mass-produced woodwork for administrative, residential and hospitality projects.",
       "We have worked as woodwork contractors since 2016, building on more than thirty years of industry experience. Timber is the signature of everything we deliver: slatted feature walls, entrance doors, kitchens, wardrobes and reception desks.",
-      "Our clients include developers, contractors, hotels, banks and private owners, from head offices in Capital Business Park to villas on the North Coast.",
+      "Our clients include developers, contractors, hotels, banks and private owners, from head offices in Capital Business Park to private homes in Heliopolis and Sheikh Zayed.",
     ],
-    image: photos["dusit-02"],
+    image: photos["heliopolis-06"],
   },
 
   stats: [
@@ -47,7 +47,7 @@ export const about = {
     ],
   },
 
-  wideImage: photos["marina-02"],
+  wideImage: photos["heliopolis-01"],
 
   logo,
 
