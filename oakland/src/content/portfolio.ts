@@ -64,7 +64,7 @@ export const projects: Project[] = [
     sector: "Administrative",
     client: "Dorra Group",
     location: "Capital Business Park",
-    images: range("dorra", 4),
+    images: range("dorra", 5),
   },
   {
     id: "excel",

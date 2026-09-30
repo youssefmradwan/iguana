@@ -20,6 +20,7 @@ export const photos = {
   "dorra-02": photo("dorra-02", 1043, 909, "Walnut reception desk with a marble end panel"),
   "dorra-03": photo("dorra-03", 1037, 895, "Waiting area with walnut wall cladding and a grey sofa"),
   "dorra-04": photo("dorra-04", 1049, 898, "Walnut-panelled wall with flush integrated doors behind a leather sofa"),
+  "dorra-05": photo("dorra-05", 985, 855, "Lounge by full-height windows with lattice screens, walnut panelling and a circular light in the slatted ceiling"),
   "excel-01": photo("excel-01", 771, 759, "Corridor lined with full-height walnut panels and flush doors"),
   "excel-02": photo("excel-02", 771, 757, "Reception with a marble counter framed in walnut panelling"),
   "excel-03": photo("excel-03", 771, 759, "Boardroom with a long timber table and walnut wall panelling"),
