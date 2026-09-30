@@ -106,6 +106,6 @@ export const faqs = [
   },
   {
     q: "Where do you work?",
-    a: "We are based in Cairo and have delivered projects across Greater Cairo and on the North Coast.",
+    a: "Our office is in Katameya Business Complex, Cairo. We have delivered projects across Greater Cairo and on the North Coast.",
   },
 ];

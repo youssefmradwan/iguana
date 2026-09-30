@@ -24,7 +24,12 @@ const jsonLd = {
   url: site.url,
   logo: new URL(logo.full, site.url).toString(),
   telephone: site.contact.people.map((p) => p.phoneHref.replace("tel:", "")),
-  address: { "@type": "PostalAddress", addressLocality: "Cairo", addressCountry: "EG" },
+  address: {
+    "@type": "PostalAddress",
+    streetAddress: "Katameya Business Complex",
+    addressLocality: "Cairo",
+    addressCountry: "EG",
+  },
   areaServed: "Egypt",
 };
 

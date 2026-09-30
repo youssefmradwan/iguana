@@ -34,7 +34,11 @@ export default function SiteFooter() {
                 </a>
               </li>
             )}
-            <li>{site.contact.location}</li>
+            <li>
+              <a href={site.contact.mapUrl} target="_blank" rel="noopener noreferrer" className="transition-colors hover:text-cream">
+                {site.contact.location}
+              </a>
+            </li>
           </ul>
         </div>
 

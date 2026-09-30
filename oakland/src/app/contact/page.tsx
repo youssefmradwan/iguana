@@ -53,8 +53,21 @@ export default function ContactPage() {
                   </div>
                 )}
                 <div>
-                  <dt className="eyebrow text-brass">Based in</dt>
-                  <dd className="mt-3 text-stone">{site.contact.location}</dd>
+                  <dt className="eyebrow text-brass">Visit us</dt>
+                  <dd className="mt-3 text-stone">
+                    <address className="not-italic">{site.contact.location}</address>
+                    <a
+                      href={site.contact.mapUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="link-line mt-3 text-brass"
+                    >
+                      Open in Google Maps
+                      <span aria-hidden="true" className="arrow">
+                        →
+                      </span>
+                    </a>
+                  </dd>
                 </div>
               </dl>
               <Photo image={contactImage} natural sizes="(min-width: 1024px) 30vw, 100vw" />

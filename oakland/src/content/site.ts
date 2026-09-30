@@ -15,7 +15,8 @@ export const site = {
   locale: "en_EG",
 
   contact: {
-    location: "Cairo, Egypt",
+    location: "Katameya Business Complex, Cairo",
+    mapUrl: "https://www.google.com/maps/search/?api=1&query=Katameya+Business+Complex+Cairo",
     people: [
       { name: "Arch. Mohamed Radwan", phone: "0120 866 6010", phoneHref: "tel:+201208666010" },
       { name: "Eng. Youssef Radwan", phone: "0122 600 4006", phoneHref: "tel:+201226004006" },
