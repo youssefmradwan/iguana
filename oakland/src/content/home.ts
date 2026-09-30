@@ -8,7 +8,7 @@ export const home = {
   hero: {
     eyebrow: "Cairo, Egypt",
     tagline: "Bespoke woodwork and mass production for offices, homes and hotels.",
-    image: photos["dorra-01"],
+    image: photos["luxoft-14"],
   },
 
   intro: {
