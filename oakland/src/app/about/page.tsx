@@ -9,7 +9,7 @@ import { pageMetadata } from "@/lib/seo";
 export const metadata = pageMetadata({
   title: "About Us",
   description:
-    "Oakland is a Cairo-based construction, fine finishing and consulting firm with more than thirty years of experience, and woodwork contractor since 2016.",
+    "Oakland is a woodwork company in Cairo, making bespoke joinery and mass-produced woodwork since 2016 for offices, homes and hotels.",
   path: "/about/",
   image: about.story.image,
 });

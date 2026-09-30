@@ -7,14 +7,14 @@ import { photos } from "./images";
 export const home = {
   hero: {
     eyebrow: "Cairo, Egypt",
-    tagline: "Construction, fine finishing and woodwork for offices, homes and hotels.",
+    tagline: "Bespoke woodwork and mass production for offices, homes and hotels.",
     image: photos["dusit-01"],
   },
 
   intro: {
     eyebrow: "About Oakland",
     statement:
-      "Three decades of construction and fine finishing, and woodwork contracting since 2016. We deliver spaces where timber, stone and light come together with precision.",
+      "Woodwork is all we do. Wall cladding, doors, kitchens, wardrobes and reception desks, made to measure as one-off pieces or produced in volume to one consistent standard.",
     link: { href: "/about/", label: "About us" },
   },
 
@@ -31,7 +31,7 @@ export const home = {
 
   services: {
     eyebrow: "Services",
-    title: "What we do",
+    title: "Two ways to work with us",
     link: { href: "/services/", label: "Our services" },
   },
 

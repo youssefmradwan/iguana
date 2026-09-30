@@ -13,12 +13,10 @@ export const contactPage = {
 };
 
 export const projectTypes = [
-  "Administrative / office",
-  "Residential",
-  "Hospitality",
-  "Woodwork only",
-  "Consulting",
-  "Something else",
+  "Bespoke woodwork",
+  "Mass production",
+  "Both",
+  "Not sure yet",
 ];
 
 // PLACEHOLDER ranges — confirm or adjust to suit typical project sizes.

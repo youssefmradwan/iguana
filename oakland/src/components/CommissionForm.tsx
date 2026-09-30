@@ -133,7 +133,7 @@ export default function CommissionForm() {
       <fieldset className="space-y-10">
         <legend className="eyebrow mb-8 text-brass">Your project</legend>
         <div className="grid gap-10 sm:grid-cols-3">
-          <SelectField label="Project type" name="projectType" options={projectTypes} value={values.projectType} error={shown("projectType")} onChange={onChange} onBlur={onBlur} />
+          <SelectField label="Service" name="projectType" options={projectTypes} value={values.projectType} error={shown("projectType")} onChange={onChange} onBlur={onBlur} />
           <SelectField label="Approximate budget" name="budget" options={budgetRanges} value={values.budget} error={shown("budget")} onChange={onChange} onBlur={onBlur} />
           <SelectField label="Timeline" name="timeline" options={timelines} value={values.timeline} error={shown("timeline")} onChange={onChange} onBlur={onBlur} />
         </div>
@@ -142,7 +142,7 @@ export default function CommissionForm() {
           id="description"
           label="Tell us about the project"
           required
-          hint="The space and its size, the scope of work, your role (owner, designer or contractor), and any drawings or references."
+          hint="What you need made, rough sizes and quantities, the type of space (office, home, hotel), your role (owner, designer or contractor), and any drawings or references."
           error={shown("description")}
         >
           {(describedBy) => (

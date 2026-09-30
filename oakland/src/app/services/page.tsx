@@ -8,7 +8,7 @@ import { pageMetadata } from "@/lib/seo";
 export const metadata = pageMetadata({
   title: "Services & Process",
   description:
-    "Main contracting, fine finishing, woodwork and consulting for administrative, residential and hospitality projects in Egypt — and how a project runs from first meeting to handover.",
+    "Bespoke woodwork and mass-produced joinery for administrative, residential and hospitality projects in Egypt, and how a project runs from first meeting to installation.",
   path: "/services/",
   image: services[1].image,
 });

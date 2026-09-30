@@ -18,7 +18,7 @@ export const metadata = pageMetadata({
 
 const jsonLd = {
   "@context": "https://schema.org",
-  "@type": "GeneralContractor",
+  "@type": "LocalBusiness",
   name: site.name,
   description: site.description,
   url: site.url,
@@ -199,12 +199,30 @@ export default function HomePage() {
               {home.services.link.label}
             </ArrowLink>
           </Reveal>
-          <ul className="mt-16 grid gap-x-10 gap-y-12 sm:mt-20 sm:grid-cols-2 lg:grid-cols-4">
+          <ul className="mt-16 grid gap-x-8 gap-y-16 sm:mt-20 md:grid-cols-2 lg:gap-x-12">
             {services.map((service, i) => (
-              <Reveal as="li" key={service.slug} delay={i * 100} className="border-t border-ink/20 pt-6">
+              <Reveal as="li" key={service.slug} delay={i * 140}>
                 <Link href={`/services/#${service.slug}`} className="group block">
-                  <h3 className="display text-3xl transition-colors group-hover:text-brass-deep">{service.title}</h3>
-                  <p className="mt-4 text-sm leading-relaxed text-umber">{service.summary}</p>
+                  <div className="overflow-hidden">
+                    <Photo
+                      image={service.image}
+                      sizes="(min-width: 768px) 50vw, 100vw"
+                      className="aspect-[4/3]"
+                      imgClassName="transition-transform duration-[1.6s] ease-out group-hover:scale-[1.04]"
+                    />
+                  </div>
+                  <h3 className="display mt-6 text-3xl transition-colors group-hover:text-brass-deep sm:text-4xl">
+                    {service.title}
+                  </h3>
+                  <p className="mt-3 max-w-md text-base leading-relaxed text-umber">{service.summary}</p>
+                  <ul className="mt-6 grid grid-cols-1 gap-x-6 gap-y-2 border-t border-ink/15 pt-5 text-sm text-umber sm:grid-cols-2">
+                    {service.includes.map((item) => (
+                      <li key={item} className="flex gap-3">
+                        <span aria-hidden="true" className="mt-2.5 h-px w-3 shrink-0 bg-brass-deep" />
+                        {item}
+                      </li>
+                    ))}
+                  </ul>
                 </Link>
               </Reveal>
             ))}

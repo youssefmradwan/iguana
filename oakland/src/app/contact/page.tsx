@@ -12,7 +12,7 @@ const contactImage = photos["doors-01"];
 export const metadata = pageMetadata({
   title: "Contact",
   description:
-    "Contact Oakland in Cairo about construction, fine finishing and woodwork projects. Call Arch. Mohamed Radwan or Eng. Youssef Radwan, or send an enquiry.",
+    "Contact Oakland in Cairo about bespoke woodwork or mass production. Call Arch. Mohamed Radwan or Eng. Youssef Radwan, or send an enquiry.",
   path: "/contact/",
 });
 

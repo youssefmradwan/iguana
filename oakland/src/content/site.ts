@@ -5,11 +5,11 @@
 
 export const site = {
   name: "Oakland",
-  descriptor: "Construction · Fine Finishing · Woodwork",
-  shortDescriptor: "Fine Finishing & Woodwork",
-  tagline: "Construction, fine finishing and woodwork, crafted in Cairo.",
+  descriptor: "Bespoke Woodwork · Mass Production",
+  shortDescriptor: "Woodwork",
+  tagline: "Woodwork made in Cairo, from a single piece to a full production run.",
   description:
-    "Oakland is a construction, fine finishing and woodwork contractor based in Cairo, Egypt, delivering administrative, residential and hospitality projects.",
+    "Oakland is a woodwork company in Cairo, Egypt, making bespoke joinery and mass-produced woodwork for offices, homes and hotels.",
   // PLACEHOLDER — the production domain. Used for canonical URLs, Open Graph and the sitemap.
   url: "https://www.oakland-eg.example",
   locale: "en_EG",

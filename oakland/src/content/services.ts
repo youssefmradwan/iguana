@@ -1,6 +1,6 @@
 /**
  * Services, how a project works, and FAQs — used on /services and the home page.
- * The four services and their one-line summaries come from the company profile.
+ * Oakland offers two services: bespoke woodwork and mass production.
  */
 import { photos } from "./images";
 import type { Image } from "./types";
@@ -16,47 +16,43 @@ export type Service = {
 
 export const servicesIntro = {
   eyebrow: "Services",
-  title: "From structure to the final detail",
+  title: "Bespoke pieces or full production runs",
   lede:
-    "We work as main contractor for construction and fine finishing, and as woodwork contractor on administrative, residential and hospitality projects. Clients can bring us in for the whole build or for the joinery alone.",
+    "We make woodwork for administrative, residential and hospitality projects. Some jobs need one piece made for one space. Others need the same piece made many times over. We do both, to the same standard.",
 };
 
 export const services: Service[] = [
   {
-    slug: "main-contracting",
-    title: "Main contracting",
-    summary: "Leading construction works as main contractor, managing trades and delivery.",
+    slug: "bespoke-woodwork",
+    title: "Bespoke woodwork",
+    summary: "One-off joinery designed and made to measure for a specific space.",
     body:
-      "We take responsibility for the whole project: coordinating every trade on site, keeping to programme, and answering to one standard of quality from the first works to handover.",
-    includes: ["Construction works", "Trade coordination", "Programme & site management", "Handover"],
-    image: photos["luxoft-06"],
-  },
-  {
-    slug: "fine-finishing",
-    title: "Fine finishing",
-    summary: "High-end interior finishing for offices, homes and hospitality spaces.",
-    body:
-      "The last layer of a building is the one people live with. We deliver finishing works where the joints, lines and junctions between materials are resolved with care.",
-    includes: ["Offices & head offices", "Private residences & villas", "Hotel & restaurant interiors", "Banking halls"],
-    image: photos["marina-01"],
-  },
-  {
-    slug: "woodwork",
-    title: "Woodwork",
-    summary: "Custom joinery, wall cladding, doors, kitchens and wardrobes.",
-    body:
-      "Woodwork is at the heart of Oakland. Every piece is made to measure for its space, from slatted feature walls and pivot entrance doors to kitchens, dressing rooms and reception desks.",
-    includes: ["Wall cladding & slatted screens", "Entrance & pivot doors", "Kitchens & wardrobes", "Reception desks & counters"],
+      "Every bespoke piece starts on site. We measure, develop shop drawings with you or your designer, and make each item to fit its space exactly, from slatted feature walls and pivot entrance doors to kitchens, dressing rooms and reception desks.",
+    includes: [
+      "Wall cladding & slatted screens",
+      "Entrance & pivot doors",
+      "Kitchens, wardrobes & dressing rooms",
+      "Reception desks & counters",
+      "Feature ceilings & staircases",
+      "One-off furniture",
+    ],
     image: photos["dusit-03"],
   },
   {
-    slug: "consulting",
-    title: "Consulting",
-    summary: "Technical and finishing advice for owners, designers and contractors.",
+    slug: "mass-production",
+    title: "Mass production",
+    summary: "Repeat woodwork made in volume to one consistent specification.",
     body:
-      "Owners, designers and contractors call on our experience to review details, choose materials and finishes, and plan the finishing stages of a project before work starts on site.",
-    includes: ["Detail & shop-drawing review", "Material & finish selection", "Finishing works planning", "Site advice"],
-    image: photos["excel-03"],
+      "For developers, hotels and offices that need the same item many times, we produce woodwork in batches from approved samples and drawings, so the first piece and the last match.",
+    includes: [
+      "Doors & frames",
+      "Kitchen & wardrobe units",
+      "Lockers & office storage",
+      "Hotel room joinery",
+      "Wall panels to a repeat specification",
+      "Furniture in series",
+    ],
+    image: photos["luxoft-04"],
   },
 ];
 
@@ -64,49 +60,49 @@ export type ProcessStep = { title: string; body: string };
 
 export const processIntro = {
   eyebrow: "How we work",
-  title: "From first meeting to handover",
-  lede: "Every project is different, but most follow the same path. We adapt it to your programme and the other parties involved.",
+  title: "From first meeting to installation",
+  lede: "Bespoke pieces and production runs follow the same path, adapted to your programme and the other parties involved.",
 };
 
 export const process: ProcessStep[] = [
   {
     title: "First meeting",
-    body: "We start by understanding the project: the space, the brief, the programme, and who else is involved, whether that is an owner, designer or main contractor.",
+    body: "Tell us what you need: one bespoke piece, a full fit-out of joinery, or a quantity of repeat items. We also want to know about the space, the programme and who else is involved.",
   },
   {
     title: "Site survey",
-    body: "We visit the site to measure, check existing conditions and identify anything that will affect the finishing or joinery works.",
+    body: "For bespoke work we measure on site and check existing conditions. For production runs we confirm the specification and quantities.",
   },
   {
-    title: "Design & shop drawings",
-    body: "We develop or review the design and prepare detailed shop drawings and material samples for approval before anything is made.",
+    title: "Drawings & samples",
+    body: "We prepare shop drawings and timber and finish samples. For production runs, a first sample piece is approved before the batch begins.",
   },
   {
     title: "Proposal",
     body: "You receive a clear scope, price and programme, so everyone knows what will be delivered and when.",
   },
   {
-    title: "Fabrication & site works",
-    body: "Joinery is made to measure while finishing works progress on site. We keep you updated at every stage.",
+    title: "Production",
+    body: "Bespoke pieces are made to measure. Production runs are made in batches and checked against the approved sample. We keep you updated throughout.",
   },
   {
-    title: "Installation & handover",
-    body: "We install, finish and snag every item before handing the space over, ready to use.",
+    title: "Delivery & installation",
+    body: "We deliver and install, then check every item before handover.",
   },
 ];
 
 export const faqs = [
   {
-    q: "What kinds of projects do you take on?",
-    a: "Administrative, residential and hospitality projects: head offices, banks, private homes and villas, hotel lobbies and restaurants.",
+    q: "What is the difference between bespoke woodwork and mass production?",
+    a: "Bespoke woodwork is designed and made for one specific space, usually as a single piece or a small set. Mass production is for items needed many times over, like doors, wardrobes or hotel room joinery, made in batches to one approved specification.",
   },
   {
-    q: "Can you do just the woodwork on a project?",
-    a: "Yes. We work as main contractor for construction and fine finishing, and also as woodwork contractor alongside another main contractor.",
+    q: "Can one project use both?",
+    a: "Yes. A hotel or office often needs feature pieces for the lobby or reception, plus repeat items for rooms or floors. We can handle both on the same project.",
   },
   {
-    q: "Do you work with architects and interior designers?",
-    a: "Often. We can build to a designer's drawings, develop the joinery details with them, or advise on finishes and materials.",
+    q: "Do you work with architects, designers and contractors?",
+    a: "Often. We can make woodwork to a designer's drawings, develop the joinery details with them, or work as woodwork contractor alongside a main contractor.",
   },
   {
     q: "Where do you work?",

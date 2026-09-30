@@ -1,6 +1,8 @@
-# Oakland — Construction · Fine Finishing · Woodwork
+# Oakland — Bespoke Woodwork · Mass Production
 
-Website for Oakland, a construction, fine finishing and woodwork contractor based in Cairo, Egypt. Content, photography, logo and brand colours come from the Oakland company profile.
+Website for Oakland, a woodwork company in Cairo, Egypt, offering bespoke woodwork and mass production. Projects, photography, logo and brand colours come from the Oakland company profile.
+
+> The earlier version, which also covered construction, fine finishing and consulting, is commit `ebee3e0` on this branch. Check it out with `git checkout ebee3e0`.
 
 It is a static, responsive site built with **Next.js (App Router)**, **Tailwind CSS v4** and **TypeScript**. `npm run build` exports plain HTML/CSS/JS to `out/`, so it can be hosted anywhere (Netlify, Vercel, Cloudflare Pages, S3, any static host).
 
@@ -29,7 +31,7 @@ src/
     images.ts         catalogue of every photo (file, size, alt text) + logo files
     home.ts           home page copy
     about.ts          about text, key figures, approach
-    services.ts       the four services, project process, FAQs
+    services.ts       the two services (bespoke, mass production), process, FAQs
     portfolio.ts      projects (sector, client, location, scope, photos) + sectors
     contact.ts        enquiry form options, upload limits, contact page copy
   app/              ← one folder per page (layout only, reads from content/)

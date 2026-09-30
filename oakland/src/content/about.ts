@@ -1,48 +1,48 @@
 /**
- * Copy for the About page. Facts (founding, years of experience, services)
- * come from the company profile; review the wording before launch.
+ * Copy for the About page. Facts (woodwork since 2016, 30+ years of experience,
+ * sectors) come from the company profile; review the wording before launch.
  */
 import { logo, photos } from "./images";
 
 export const about = {
   eyebrow: "About us",
-  title: "Built on three decades of craft",
+  title: "Woodwork, made in Cairo",
   heroImage: photos["brand-01"],
 
   story: {
     heading: "Who we are",
     paragraphs: [
-      "Oakland is a construction, finishing and consulting services firm based in Cairo, Egypt. We work as main contractor for construction and fine finishing, and as woodwork contractor on administrative, residential and hospitality projects.",
-      "Our experience in construction and fine finishing goes back more than thirty years. Since 2016 we have also worked as woodwork contractors, and timber has become the signature of our projects: slatted feature walls, entrance doors, kitchens, wardrobes and reception desks, each made for its space.",
+      "Oakland is a woodwork company based in Cairo, Egypt. We make bespoke joinery and mass-produced woodwork for administrative, residential and hospitality projects.",
+      "We have worked as woodwork contractors since 2016, building on more than thirty years of industry experience. Timber is the signature of everything we deliver: slatted feature walls, entrance doors, kitchens, wardrobes and reception desks.",
       "Our clients include developers, contractors, hotels, banks and private owners, from head offices in Capital Business Park to villas on the North Coast.",
     ],
     image: photos["dusit-02"],
   },
 
   stats: [
-    { value: "30+", label: "years in construction and fine finishing" },
     { value: "2016", label: "woodwork contracting since" },
-    { value: "3", label: "sectors: administrative, residential, hospitality" },
+    { value: "30+", label: "years of industry experience" },
+    { value: "2", label: "services: bespoke woodwork and mass production" },
   ],
 
   principles: {
     heading: "How we work",
     items: [
       {
-        title: "One team, start to finish",
-        body: "As main contractor we coordinate every trade on site, so finishing and joinery are planned together rather than left to the end.",
+        title: "One piece or many",
+        body: "Whether you need a single reception desk or two hundred wardrobe units, the same team makes it, to the same standard.",
       },
       {
         title: "Made for the space",
-        body: "Joinery is measured on site and made to fit: cladding that lines up with doors, slats that align with ceilings, storage built into the architecture.",
+        body: "Bespoke work is measured on site and made to fit: cladding that lines up with doors, slats that align with ceilings, storage built into the architecture.",
       },
       {
-        title: "Attention to detail",
-        body: "The quality of a finish is in its junctions. We care about how timber meets stone, how panels meet ceilings, and how everything is lit.",
+        title: "Consistent in volume",
+        body: "Production runs start from an approved sample and drawings, so every piece in the batch matches the first.",
       },
       {
         title: "Clear communication",
-        body: "Owners, designers and contractors get a clear scope, drawings for approval and regular updates from site.",
+        body: "Owners, designers and contractors get a clear scope, drawings for approval and regular progress updates.",
       },
     ],
   },

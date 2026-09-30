@@ -23,23 +23,23 @@ export const portfolioIntro = {
   eyebrow: "Projects",
   title: "Selected work",
   lede:
-    "Head offices, banking halls, private homes, hotel lobbies and restaurants, finished and fitted out across Greater Cairo and the North Coast.",
+    "Woodwork for head offices, banking halls, private homes, hotel lobbies and restaurants across Greater Cairo and the North Coast.",
 };
 
 export const sectors: { name: Sector; summary: string; cover: Image }[] = [
   {
     name: "Administrative",
-    summary: "Head offices, customer service centres and banking halls, finished and fitted out across Greater Cairo.",
+    summary: "Wall cladding, reception desks, doors and storage for head offices, customer service centres and banking halls.",
     cover: photos["section-01"],
   },
   {
     name: "Residential",
-    summary: "Private homes with bespoke joinery, kitchens, dressing rooms and feature timber work.",
+    summary: "Bespoke joinery, kitchens, dressing rooms, entrance doors and feature timber work for private homes.",
     cover: photos["section-02"],
   },
   {
     name: "Hospitality",
-    summary: "Hotel lobbies, restaurants and poolside spaces, with feature woodwork throughout.",
+    summary: "Feature woodwork for hotel lobbies, restaurants and poolside spaces.",
     cover: photos["section-03"],
   },
 ];
