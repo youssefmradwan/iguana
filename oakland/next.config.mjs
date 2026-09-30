@@ -6,6 +6,8 @@ const nextConfig = {
   // Responsive sizes are handled by <Photo /> — see src/components/Photo.tsx.
   images: { unoptimized: true },
   trailingSlash: true,
+  // Don't auto-generate AGENTS.md / CLAUDE.md on `next dev`.
+  agentRules: false,
 };
 
 export default nextConfig;
