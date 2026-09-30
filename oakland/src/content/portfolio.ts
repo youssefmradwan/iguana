@@ -73,6 +73,7 @@ export const projects: Project[] = [
     client: "Dorra Group",
     location: "Capital Business Park",
     images: [...range("excel", 3), photos["section-01"]],
+    featured: true,
   },
   {
     id: "qorrect",
@@ -97,7 +98,6 @@ export const projects: Project[] = [
     client: "Private client",
     location: "Heliopolis",
     images: [...range("heliopolis", 6), photos["section-02"]],
-    featured: true,
   },
   {
     id: "zayed",
