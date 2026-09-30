@@ -61,7 +61,13 @@ export default function PortfolioGallery({ projects, categories }: { projects: P
 
       <ul className="mt-12 columns-1 gap-8 sm:columns-2 lg:columns-3 lg:gap-10">
         {visible.map((project, i) => (
-          <li key={project.id} className="animate-fade-up mb-12 break-inside-avoid" style={{ animationDelay: `${(i % 6) * 70}ms` }}>
+          <li
+            key={project.id}
+            data-category={project.category}
+            data-location={project.location}
+            className="animate-fade-up mb-12 break-inside-avoid"
+            style={{ animationDelay: `${(i % 6) * 70}ms` }}
+          >
             <figure>
               <button
                 type="button"
