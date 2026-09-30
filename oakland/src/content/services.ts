@@ -1,7 +1,8 @@
 /**
- * Services and the commission process — used on /services and the home page.
+ * Services, how a project works, and FAQs — used on /services and the home page.
+ * The four services and their one-line summaries come from the company profile.
  */
-import { images } from "./images";
+import { photos } from "./images";
 import type { Image } from "./types";
 
 export type Service = {
@@ -10,133 +11,105 @@ export type Service = {
   summary: string;
   body: string;
   includes: string[];
-  leadTime: string;
   image: Image;
 };
 
 export const servicesIntro = {
   eyebrow: "Services",
-  title: "Four disciplines, one workshop",
+  title: "From structure to the final detail",
   lede:
-    "Whether it is a single chair or every cabinet in a house, the work passes through the same hands and the same standards. We take on a small number of commissions each year so that each receives our full attention.",
+    "We work as main contractor for construction and fine finishing, and as woodwork contractor on administrative, residential and hospitality projects. Clients can bring us in for the whole build or for the joinery alone.",
 };
 
 export const services: Service[] = [
   {
-    slug: "furniture",
-    title: "Bespoke furniture",
-    summary: "Tables, seating, beds and cabinets, drawn for the room they will live in.",
+    slug: "main-contracting",
+    title: "Main contracting",
+    summary: "Leading construction works as main contractor, managing trades and delivery.",
     body:
-      "Freestanding pieces designed around the way you live — the height you like to sit at, the number of people you cook for, the light that falls across the floor in the afternoon. Every joint is cut by hand and every surface finished in oil or wax, never lacquered over.",
-    includes: ["Dining & occasional tables", "Chairs & benches", "Beds & bedside cabinets", "Desks & writing tables"],
-    leadTime: "12 – 20 weeks",
-    image: images.dining,
+      "We take responsibility for the whole project: coordinating every trade on site, keeping to programme, and answering to one standard of quality from the first works to handover.",
+    includes: ["Construction works", "Trade coordination", "Programme & site management", "Handover"],
+    image: photos["luxoft-06"],
   },
   {
-    slug: "kitchens",
-    title: "Kitchens",
-    summary: "Solid-timber kitchens built to work hard and age beautifully.",
+    slug: "fine-finishing",
+    title: "Fine finishing",
+    summary: "High-end interior finishing for offices, homes and hospitality spaces.",
     body:
-      "Our kitchens are made the way furniture is made: solid timber carcasses, hand-cut dovetailed drawers, and doors hung to close with a quiet, weighty click. We plan the room with you from first sketch to final fitting, working alongside your architect or builder where needed.",
-    includes: ["Full kitchen design & build", "Islands & larders", "Pantries & utility rooms", "Stone & metal worktop coordination"],
-    leadTime: "20 – 30 weeks",
-    image: images.kitchen,
+      "The last layer of a building is the one people live with. We deliver finishing works where the joints, lines and junctions between materials are resolved with care.",
+    includes: ["Offices & head offices", "Private residences & villas", "Hotel & restaurant interiors", "Banking halls"],
+    image: photos["marina-01"],
   },
   {
-    slug: "built-ins",
-    title: "Built-ins & joinery",
-    summary: "Libraries, wardrobes and panelling that become part of the architecture.",
+    slug: "woodwork",
+    title: "Woodwork",
+    summary: "Custom joinery, wall cladding, doors, kitchens and wardrobes.",
     body:
-      "Fitted joinery should feel as though it has always been there. We survey each space by hand, scribe to every uneven wall and build in the workshop before installing on site — so the finished room is calm, precise and quietly generous with storage.",
-    includes: ["Libraries & shelving", "Dressing rooms & wardrobes", "Wall panelling", "Media walls & window seats"],
-    leadTime: "14 – 24 weeks",
-    image: images.builtIn,
+      "Woodwork is at the heart of Oakland. Every piece is made to measure for its space, from slatted feature walls and pivot entrance doors to kitchens, dressing rooms and reception desks.",
+    includes: ["Wall cladding & slatted screens", "Entrance & pivot doors", "Kitchens & wardrobes", "Reception desks & counters"],
+    image: photos["dusit-03"],
   },
   {
-    slug: "statement-pieces",
-    title: "Statement pieces",
-    summary: "One-off commissions where the brief is simply: make something remarkable.",
+    slug: "consulting",
+    title: "Consulting",
+    summary: "Technical and finishing advice for owners, designers and contractors.",
     body:
-      "For clients who want a single piece to anchor a room — a boardroom table cut from one tree, a sculptural staircase balustrade, a cabinet of curiosities. These commissions begin with conversation and material, and are allowed the time they need.",
-    includes: ["Single-slab tables", "Sculptural cabinets", "Architectural details", "Heirloom & gift commissions"],
-    leadTime: "By discussion",
-    image: images.armchair,
+      "Owners, designers and contractors call on our experience to review details, choose materials and finishes, and plan the finishing stages of a project before work starts on site.",
+    includes: ["Detail & shop-drawing review", "Material & finish selection", "Finishing works planning", "Site advice"],
+    image: photos["excel-03"],
   },
 ];
 
-export type ProcessStep = {
-  title: string;
-  duration: string;
-  body: string;
-};
+export type ProcessStep = { title: string; body: string };
 
 export const processIntro = {
-  eyebrow: "The commission",
-  title: "How a piece comes to be",
-  lede:
-    "A commission is a collaboration. The process below is how most of our projects unfold — though we are always happy to adapt it to yours.",
+  eyebrow: "How we work",
+  title: "From first meeting to handover",
+  lede: "Every project is different, but most follow the same path. We adapt it to your programme and the other parties involved.",
 };
 
 export const process: ProcessStep[] = [
   {
-    title: "Conversation",
-    duration: "Week 1",
-    body:
-      "We begin with a call or a visit to the workshop. We want to understand the room, the way you use it, and what you would like the piece to feel like. There is no charge and no obligation.",
+    title: "First meeting",
+    body: "We start by understanding the project: the space, the brief, the programme, and who else is involved, whether that is an owner, designer or main contractor.",
   },
   {
-    title: "Survey & sketch",
-    duration: "Weeks 2 – 3",
-    body:
-      "We visit your home to measure and photograph the space, then return with hand sketches and an initial estimate so you can see where the ideas are heading.",
+    title: "Site survey",
+    body: "We visit the site to measure, check existing conditions and identify anything that will affect the finishing or joinery works.",
   },
   {
-    title: "Design & drawings",
-    duration: "Weeks 3 – 6",
-    body:
-      "A design fee secures detailed drawings, timber samples and finish boards. We refine together until every proportion is right. The design fee is credited against the final commission.",
+    title: "Design & shop drawings",
+    body: "We develop or review the design and prepare detailed shop drawings and material samples for approval before anything is made.",
   },
   {
-    title: "Commission",
-    duration: "On approval",
-    body:
-      "You receive a fixed-price proposal with a clear schedule. On signing and a deposit, we select and set aside your timber — often from boards we have been air-drying for years.",
+    title: "Proposal",
+    body: "You receive a clear scope, price and programme, so everyone knows what will be delivered and when.",
   },
   {
-    title: "Making",
-    duration: "8 – 24 weeks",
-    body:
-      "Your piece is made by hand in our workshop. We share progress photographs along the way and you are always welcome to visit and see it take shape on the bench.",
+    title: "Fabrication & site works",
+    body: "Joinery is made to measure while finishing works progress on site. We keep you updated at every stage.",
   },
   {
-    title: "Delivery & installation",
-    duration: "Final week",
-    body:
-      "We deliver and install everything ourselves, with care. Before we leave, we walk you through caring for the timber and finish.",
-  },
-  {
-    title: "Aftercare",
-    duration: "For life",
-    body:
-      "Solid wood moves with the seasons. We return after the first year to make any adjustments, and we will refinish or repair any piece we have made, for as long as it is in use.",
+    title: "Installation & handover",
+    body: "We install, finish and snag every item before handing the space over, ready to use.",
   },
 ];
 
 export const faqs = [
   {
-    q: "What does a commission typically cost?",
-    a: "Freestanding furniture generally begins around $6,000; kitchens and larger joinery projects typically start from $45,000. We provide an initial estimate after our first visit and a fixed price before any making begins.",
+    q: "What kinds of projects do you take on?",
+    a: "Administrative, residential and hospitality projects: head offices, banks, private homes and villas, hotel lobbies and restaurants.",
+  },
+  {
+    q: "Can you do just the woodwork on a project?",
+    a: "Yes. We work as main contractor for construction and fine finishing, and also as woodwork contractor alongside another main contractor.",
   },
   {
     q: "Do you work with architects and interior designers?",
-    a: "Often. We are happy to work to a designer's drawings, collaborate on the detailing, or lead the joinery design ourselves.",
+    a: "Often. We can build to a designer's drawings, develop the joinery details with them, or advise on finishes and materials.",
   },
   {
-    q: "Which timbers do you use?",
-    a: "Mostly native hardwoods — oak, walnut, ash, cherry and elm — from sustainably managed sources we know personally. We are glad to discuss reclaimed or client-supplied timber.",
-  },
-  {
-    q: "How far do you travel?",
-    a: "We install throughout the region as standard, and further afield for larger commissions. Freestanding pieces can be crated and shipped.",
+    q: "Where do you work?",
+    a: "We are based in Cairo and have delivered projects across Greater Cairo and on the North Coast.",
   },
 ];

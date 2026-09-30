@@ -8,7 +8,7 @@ import { pageMetadata } from "@/lib/seo";
 export const metadata = pageMetadata({
   title: "Services & Process",
   description:
-    "Bespoke furniture, kitchens, fitted joinery and statement pieces — and how a commission unfolds, from first conversation to installation and lifelong aftercare.",
+    "Main contracting, fine finishing, woodwork and consulting for administrative, residential and hospitality projects in Egypt — and how a project runs from first meeting to handover.",
   path: "/services/",
   image: services[1].image,
 });
@@ -35,8 +35,7 @@ export default function ServicesPage() {
                 delay={150}
                 className={`md:col-span-5 ${i % 2 === 1 ? "md:order-1 md:col-start-1 md:pr-6" : "md:pl-6"}`}
               >
-                <span className="font-serif text-lg text-brass">{String(i + 1).padStart(2, "0")}</span>
-                <h2 id={`${service.slug}-title`} className="display mt-3 text-4xl text-cream sm:text-5xl">
+                <h2 id={`${service.slug}-title`} className="display text-4xl text-cream sm:text-5xl">
                   {service.title}
                 </h2>
                 <p className="mt-6 text-base leading-relaxed text-stone">{service.body}</p>
@@ -48,9 +47,6 @@ export default function ServicesPage() {
                     </li>
                   ))}
                 </ul>
-                <p className="mt-8 text-xs tracking-[0.2em] text-stone uppercase">
-                  Typical lead time <span className="ml-2 text-cream">{service.leadTime}</span>
-                </p>
               </Reveal>
             </article>
           ))}
@@ -84,10 +80,7 @@ export default function ServicesPage() {
                   {String(i + 1).padStart(2, "0")}
                 </span>
                 <div>
-                  <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1">
-                    <h3 className="display text-3xl">{step.title}</h3>
-                    <span className="text-xs tracking-[0.2em] text-umber uppercase">{step.duration}</span>
-                  </div>
+                  <h3 className="display text-3xl">{step.title}</h3>
                   <p className="mt-4 max-w-xl text-base leading-relaxed text-umber">{step.body}</p>
                 </div>
               </Reveal>
@@ -123,7 +116,7 @@ export default function ServicesPage() {
               ))}
             </div>
             <div className="mt-14">
-              <ButtonLink href="/contact/">Begin a commission</ButtonLink>
+              <ButtonLink href="/contact/">Start a project</ButtonLink>
             </div>
           </Reveal>
         </Container>

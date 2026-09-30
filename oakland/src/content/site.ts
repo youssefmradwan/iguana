@@ -1,33 +1,33 @@
 /**
- * Studio-wide details: name, contact information, navigation and SEO defaults.
- * Replace every value marked PLACEHOLDER before launch.
+ * Company-wide details: name, contact information, navigation and SEO defaults.
+ * Values marked PLACEHOLDER still need confirming before launch.
  */
 
 export const site = {
   name: "Oakland",
-  descriptor: "Bespoke Woodwork",
-  tagline: "Furniture made slowly, to be kept for generations.",
+  descriptor: "Construction · Fine Finishing · Woodwork",
+  shortDescriptor: "Fine Finishing & Woodwork",
+  tagline: "Construction, fine finishing and woodwork, crafted in Cairo.",
   description:
-    "Oakland designs and hand-builds bespoke furniture, kitchens and fitted joinery for private clients. Each piece is drawn, made and finished in our own workshop.",
-  // PLACEHOLDER — the production domain. Used for canonical URLs and Open Graph.
-  url: "https://www.oakland-studio.example",
-  locale: "en_US",
+    "Oakland is a construction, fine finishing and woodwork contractor based in Cairo, Egypt, delivering administrative, residential and hospitality projects.",
+  // PLACEHOLDER — the production domain. Used for canonical URLs, Open Graph and the sitemap.
+  url: "https://www.oakland-eg.example",
+  locale: "en_EG",
 
   contact: {
-    // PLACEHOLDER contact details
-    email: "studio@oakland-studio.example",
-    phone: "+1 (555) 010-0142",
-    phoneHref: "tel:+15550100142",
-    addressLines: ["The Timber Yard, Unit 4", "000 Placeholder Street", "Your City, ST 00000"],
-    hours: "Workshop visits by appointment, Tuesday – Saturday",
-    instagram: "https://instagram.com/", // PLACEHOLDER
-    instagramHandle: "@oakland.studio", // PLACEHOLDER
+    location: "Cairo, Egypt",
+    people: [
+      { name: "Arch. Mohamed Radwan", phone: "0120 866 6010", phoneHref: "tel:+201208666010" },
+      { name: "Eng. Youssef Radwan", phone: "0122 600 4006", phoneHref: "tel:+201226004006" },
+    ],
+    // PLACEHOLDER — add the company email address when available (leave "" to hide it).
+    email: "",
   },
 
   nav: [
-    { href: "/about/", label: "Story" },
+    { href: "/about/", label: "About" },
     { href: "/services/", label: "Services" },
-    { href: "/portfolio/", label: "Portfolio" },
-    { href: "/contact/", label: "Commission" },
+    { href: "/portfolio/", label: "Projects" },
+    { href: "/contact/", label: "Contact" },
   ],
 } as const;

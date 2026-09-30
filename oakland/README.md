@@ -1,6 +1,8 @@
-# Oakland — Bespoke Woodwork
+# Oakland — Construction · Fine Finishing · Woodwork
 
-Marketing site for Oakland: a static, responsive site built with **Next.js (App Router)**, **Tailwind CSS v4** and **TypeScript**. `npm run build` exports plain HTML/CSS/JS to `out/`, so it can be hosted anywhere (Netlify, Vercel, Cloudflare Pages, S3, any static host).
+Website for Oakland, a construction, fine finishing and woodwork contractor based in Cairo, Egypt. Content, photography, logo and brand colours come from the Oakland company profile.
+
+It is a static, responsive site built with **Next.js (App Router)**, **Tailwind CSS v4** and **TypeScript**. `npm run build` exports plain HTML/CSS/JS to `out/`, so it can be hosted anywhere (Netlify, Vercel, Cloudflare Pages, S3, any static host).
 
 ## Run it
 
@@ -22,53 +24,58 @@ npm run typecheck
 
 ```
 src/
-  content/          ← ALL copy, images and contact details (edit these)
-    site.ts           studio name, tagline, email, phone, address, nav, domain
-    images.ts         every placeholder photo in one place
+  content/          ← ALL copy, photos and contact details (edit these)
+    site.ts           company name, tagline, phone numbers, email, nav, domain
+    images.ts         catalogue of every photo (file, size, alt text) + logo files
     home.ts           home page copy
-    about.ts          story, philosophy, "why bespoke", founder quote
-    services.ts       services, commission process steps, FAQs
-    portfolio.ts      projects (title, category, materials, dimensions, image)
-    contact.ts        form dropdown options, upload limits, contact page copy
+    about.ts          about text, key figures, approach
+    services.ts       the four services, project process, FAQs
+    portfolio.ts      projects (sector, client, location, scope, photos) + sectors
+    contact.ts        enquiry form options, upload limits, contact page copy
   app/              ← one folder per page (layout only, reads from content/)
   components/       ← reusable layout pieces (header, footer, gallery, form…)
   lib/
     submitCommission.ts   ← the form's submit handler (placeholder, see below)
-  app/globals.css   ← colour palette, fonts and animation tokens
-public/images/      ← put your real photos here
+  app/globals.css   ← brand colours, fonts and animation tokens
+public/
+  images/projects/     full-size project photos (max 1920px)
+  images/projects/sm/  900px copies, served to phones automatically
+  brand/               logo: full JPG, plus transparent cream mark & wordmark PNGs
 ```
 
 Layout components never hard-code copy. To change wording, edit the files in `src/content/`.
 
-## Swapping in real content
+## Updating content
 
-### Photography
-1. Put optimised photos in `public/images/`. JPG or WebP at about 2400px on the long edge, under ~500 KB each, works well.
-2. In `src/content/images.ts`, change each `src` to the local path (e.g. `"/images/harrow-table.jpg"`) and **rewrite the `alt` text** to describe the real photo.
-3. Portfolio projects each point at an image in `portfolio.ts`. You can also give a project its own image inline: `image: { src: "/images/…", alt: "…" }`.
-4. Optional: add `position: "50% 30%"` to an image to control how it is cropped.
+### Adding a project or photos
+1. Put the photo in `public/images/projects/` and a 900px-wide copy with the same name in `public/images/projects/sm/`.
+2. Add a line for it in `src/content/images.ts` with its pixel size and a short description (alt text).
+3. Add or edit the project in `src/content/portfolio.ts`. The first photo in `images` is the project's cover. `featured: true` puts it on the home page.
 
-Placeholders currently come from Unsplash. If one fails to load, a walnut-toned block shows in its place instead of a broken-image icon. All images below the fold load lazily, and Unsplash images get a responsive `srcset` automatically.
+Project photos are shown uncropped at their own proportions in the portfolio, the project viewer and the home page's recent work. Only the full-width backgrounds (page heroes and banners) and the sector and service tiles are cropped.
 
 ### Logo
-The logo is currently a typeset wordmark. To replace it, edit `src/components/SiteHeader.tsx` (look for the `LOGO:` comment) and the footer in `src/components/SiteFooter.tsx`. Place logo files in `public/` and add a `favicon.ico` / `icon.png` to `src/app/` (Next.js picks these up automatically).
+The header, hero and footer use the transparent PNGs in `public/brand/`, which were cut from `oakland-logo.jpg`. If you have the logo as a vector (SVG or PDF), swap those files for sharper results. The favicon is `src/app/icon.png`.
 
-### Copy & contact details
-- Everything marked **PLACEHOLDER** in `src/content/` needs real values. This includes the email, phone, address, Instagram, founder name/quote, testimonial and the production domain (`site.url`, used for canonical URLs, Open Graph and the sitemap).
-- Budget ranges and FAQ prices are in USD. Change them in `contact.ts` and `services.ts` if needed.
+### Still to confirm before launch
+Search `src/content/` for **PLACEHOLDER**:
+- `site.url`: the real domain (used for canonical URLs, Open Graph and the sitemap).
+- `site.contact.email`: the company email. It is hidden while empty.
+- `budgetRanges` in `contact.ts`: EGP ranges I proposed. Adjust them to your typical project sizes.
+- The longer copy on the About and Services pages expands on the profile's wording. Please review it.
 
 ### Palette & fonts
-Colours and font families are defined once in the `@theme` block at the top of `src/app/globals.css`. Fonts (Cormorant Garamond + Manrope) are self-hosted via `@fontsource`, so the site makes no Google Fonts requests.
+The brand colours from the profile (walnut `#2D2118`, cream `#F3ECDF`, brass `#C29A62` / `#7A5A30`) are defined in the `@theme` block at the top of `src/app/globals.css`. Fonts (Cormorant Garamond + Manrope) are self-hosted via `@fontsource`.
 
-## Connecting the commission form
+## Connecting the enquiry form
 
 The form (`src/components/CommissionForm.tsx`) validates everything client-side: required fields, email/phone format, minimum description length, and file type/size/count. It also includes a hidden honeypot field against spam bots.
 
-On a valid submit it calls `submitCommission()` in **`src/lib/submitCommission.ts`**. Right now that function only `console.log`s the data. Replace its body with your integration, for example a Formspree/Basin endpoint, or your own serverless function that emails the studio and creates a CRM lead. The `toFormData()` helper already packages every field and uploaded file as `multipart/form-data`. Throw an error on failure and the form will show a retry message.
+On a valid submit it calls `submitCommission()` in **`src/lib/submitCommission.ts`**. Right now that function only `console.log`s the data. Replace its body with your integration, for example a Formspree/Basin endpoint, or your own serverless function that emails Oakland and creates a CRM lead. The `toFormData()` helper already packages every field and uploaded file as `multipart/form-data`. Throw an error on failure and the form will show a retry message.
 
 ## Accessibility & SEO notes
-- Semantic landmarks, skip link, visible focus styles, keyboard-accessible mobile menu (focus trap and Escape), gallery filters (`aria-pressed`) and lightbox (native `<dialog>`, arrow keys to step through).
+- Semantic landmarks, skip link, visible focus styles, keyboard-accessible mobile menu (focus trap and Escape), portfolio filters (`aria-pressed`, and links like `/portfolio/#residential` open pre-filtered) and project viewer (native `<dialog>`, arrow keys to step through photos).
 - Form fields have associated labels, hints and errors via `aria-describedby`/`aria-invalid`, and focus moves to the first invalid field.
 - Animations respect `prefers-reduced-motion`. Content is fully visible without JavaScript.
 - Text colour pairs meet WCAG AA contrast (see the notes in `globals.css`).
-- Per-page titles, meta descriptions, canonical URLs, Open Graph/Twitter tags, `sitemap.xml`, `robots.txt` and LocalBusiness JSON-LD on the home page.
+- Per-page titles, meta descriptions, canonical URLs, Open Graph/Twitter tags, `sitemap.xml`, `robots.txt` and GeneralContractor JSON-LD on the home page.

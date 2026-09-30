@@ -30,7 +30,7 @@ export type CommissionRequest = {
 
 export async function submitCommission(data: CommissionRequest): Promise<void> {
   // PLACEHOLDER: log the enquiry and simulate a short network delay.
-  console.log("[Oakland] Commission request (placeholder handler — not sent):", {
+  console.log("[Oakland] Project enquiry (placeholder handler — not sent):", {
     ...data,
     files: data.files.map((f) => `${f.name} (${Math.round(f.size / 1024)} KB)`),
   });

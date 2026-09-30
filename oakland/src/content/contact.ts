@@ -1,40 +1,40 @@
 /**
- * Commission form options and contact page copy.
+ * Enquiry form options and contact page copy.
  * Edit the option lists to change the dropdowns — the form updates itself.
  */
 
 export const contactPage = {
-  eyebrow: "Commission",
-  title: "Begin a conversation",
+  eyebrow: "Contact",
+  title: "Let’s talk about your next project",
   lede:
-    "Tell us a little about your project. The more we know, the more useful our first conversation will be. We reply personally to every enquiry within two working days.",
+    "Tell us about your project and we will get back to you to arrange a first meeting. You can also call us directly.",
   successTitle: "Thank you",
-  successBody:
-    "Your enquiry has reached the studio. One of us will be in touch personally within two working days to arrange a first conversation.",
+  successBody: "Your enquiry has reached Oakland. We will be in touch shortly to arrange a first conversation.",
 };
 
 export const projectTypes = [
-  "Bespoke furniture",
-  "Kitchen",
-  "Built-ins & joinery",
-  "Statement piece",
+  "Administrative / office",
+  "Residential",
+  "Hospitality",
+  "Woodwork only",
+  "Consulting",
   "Something else",
 ];
 
+// PLACEHOLDER ranges — confirm or adjust to suit typical project sizes.
 export const budgetRanges = [
-  "Under $10,000",
-  "$10,000 – $25,000",
-  "$25,000 – $50,000",
-  "$50,000 – $100,000",
-  "$100,000+",
+  "Under EGP 1 million",
+  "EGP 1 – 5 million",
+  "EGP 5 – 15 million",
+  "EGP 15 million +",
   "Not sure yet",
 ];
 
 export const timelines = [
   "As soon as possible",
+  "Within 3 months",
   "Within 3 – 6 months",
-  "Within 6 – 12 months",
-  "More than a year away",
+  "More than 6 months away",
   "Flexible",
 ];
 

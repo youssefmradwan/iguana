@@ -2,45 +2,48 @@
  * Copy for the home page. Sections render in the order they appear in
  * src/app/page.tsx; text and images come from here.
  */
-import { images } from "./images";
+import { photos } from "./images";
 
 export const home = {
   hero: {
-    // The brand name is taken from site.ts; this is the short line beneath it.
-    tagline: "Bespoke furniture and joinery, drawn for your home and made entirely by hand.",
-    image: images.hero,
+    eyebrow: "Cairo, Egypt",
+    tagline: "Construction, fine finishing and woodwork for offices, homes and hotels.",
+    image: photos["dusit-01"],
   },
 
   intro: {
-    eyebrow: "The studio",
+    eyebrow: "About Oakland",
     statement:
-      "We make a small number of pieces each year — tables, kitchens, libraries and heirlooms — for people who would rather wait for something right than settle for something ready.",
-    link: { href: "/about/", label: "Read our story" },
+      "Three decades of construction and fine finishing, and woodwork contracting since 2016. We deliver spaces where timber, stone and light come together with precision.",
+    link: { href: "/about/", label: "About us" },
+  },
+
+  sectors: {
+    eyebrow: "Sectors",
+    title: "Where we work",
   },
 
   selectedWork: {
-    eyebrow: "Selected work",
-    title: "Recent commissions",
-    link: { href: "/portfolio/", label: "View the portfolio" },
+    eyebrow: "Selected projects",
+    title: "Recent work",
+    link: { href: "/portfolio/", label: "All projects" },
   },
 
-  process: {
-    eyebrow: "The commission",
-    title: "From first conversation to lifelong aftercare",
-    link: { href: "/services/#process", label: "How a commission works" },
+  services: {
+    eyebrow: "Services",
+    title: "What we do",
+    link: { href: "/services/", label: "Our services" },
   },
 
-  testimonial: {
-    // PLACEHOLDER — replace with a real client quote (with permission).
-    quote:
-      "They listened for an entire afternoon before drawing a single line. The table they made is the first thing anyone touches when they walk into our kitchen.",
-    attribution: "Private client, dining commission",
+  clients: {
+    eyebrow: "Clients & partners",
+    title: "Trusted by",
   },
 
   cta: {
-    title: "Begin a commission",
-    body: "Tell us about your space and what you have in mind. We reply personally to every enquiry within two working days.",
-    link: { href: "/contact/", label: "Start the conversation" },
-    image: images.interior,
+    title: "Let’s talk about your next project",
+    body: "Tell us about your space and what you have in mind, or call us directly.",
+    link: { href: "/contact/", label: "Start a project" },
+    image: photos["lexies-01"],
   },
 };

@@ -1,78 +1,58 @@
 /**
- * Copy for the About / Story page.
- * Paragraph arrays render as separate <p> elements.
+ * Copy for the About page. Facts (founding, years of experience, services)
+ * come from the company profile; review the wording before launch.
  */
-import { images } from "./images";
+import { logo, photos } from "./images";
 
 export const about = {
-  eyebrow: "Our story",
-  title: "Made by hand, in no particular hurry",
-  heroImage: images.workshopDetail,
+  eyebrow: "About us",
+  title: "Built on three decades of craft",
+  heroImage: photos["brand-01"],
 
   story: {
-    heading: "A workshop, not a factory",
+    heading: "Who we are",
     paragraphs: [
-      "Oakland began with a single bench, a set of inherited chisels and a stubborn belief that the things we live with every day deserve to be made properly. More than a decade later we are still a small studio — a handful of makers, one workshop, and a timber store that smells of oak and linseed.",
-      "We design and build furniture and fitted joinery for private homes. Every commission starts with a conversation and a sheet of paper, and ends with a piece that fits its room so naturally it seems to have grown there.",
-      "We are not the fastest, and we are not the cheapest. We are, we hope, the people you call when you want something made once, and made right.",
+      "Oakland is a construction, finishing and consulting services firm based in Cairo, Egypt. We work as main contractor for construction and fine finishing, and as woodwork contractor on administrative, residential and hospitality projects.",
+      "Our experience in construction and fine finishing goes back more than thirty years. Since 2016 we have also worked as woodwork contractors, and timber has become the signature of our projects: slatted feature walls, entrance doors, kitchens, wardrobes and reception desks, each made for its space.",
+      "Our clients include developers, contractors, hotels, banks and private owners, from head offices in Capital Business Park to villas on the North Coast.",
     ],
-    image: images.workshop,
+    image: photos["dusit-02"],
   },
+
+  stats: [
+    { value: "30+", label: "years in construction and fine finishing" },
+    { value: "2016", label: "woodwork contracting since" },
+    { value: "3", label: "sectors: administrative, residential, hospitality" },
+  ],
 
   principles: {
-    heading: "What we believe",
+    heading: "How we work",
     items: [
       {
-        title: "Material first",
-        body: "We buy timber by the log, not the board, and let it air-dry slowly in our yard. Knowing where every plank came from means we can match grain across a whole room — and tell you the story of the tree.",
+        title: "One team, start to finish",
+        body: "As main contractor we coordinate every trade on site, so finishing and joinery are planned together rather than left to the end.",
       },
       {
-        title: "Joinery you can trust",
-        body: "Dovetails, mortise-and-tenons and drawbored pegs: joints that have held furniture together for centuries. We use screws and metal fixings only where wood-to-wood would be the wrong answer.",
+        title: "Made for the space",
+        body: "Joinery is measured on site and made to fit: cladding that lines up with doors, slats that align with ceilings, storage built into the architecture.",
       },
       {
-        title: "Finishes that age well",
-        body: "Natural oils, waxes and soaps rather than plastic lacquers. They let the wood breathe, deepen with use, and can be repaired at home rather than stripped back in a workshop.",
+        title: "Attention to detail",
+        body: "The quality of a finish is in its junctions. We care about how timber meets stone, how panels meet ceilings, and how everything is lit.",
       },
       {
-        title: "Responsibility",
-        body: "Our timber comes from certified and small-scale local sources, offcuts heat the workshop, and we will refinish or repair any piece we have ever made. The most sustainable furniture is the piece nobody ever needs to replace.",
+        title: "Clear communication",
+        body: "Owners, designers and contractors get a clear scope, drawings for approval and regular updates from site.",
       },
     ],
   },
 
-  bespoke: {
-    heading: "Why bespoke?",
-    lede: "Off-the-shelf furniture is designed for an average room that doesn’t exist. Bespoke work begins with yours.",
-    columns: [
-      {
-        label: "Off the shelf",
-        points: [
-          "Sized for a catalogue, not your space",
-          "Veneered board, stapled and glued",
-          "Lacquered finishes that chip and can’t be repaired",
-          "Designed to be replaced in a decade",
-        ],
-      },
-      {
-        label: "Oakland",
-        points: [
-          "Drawn to the millimetre for your room and your life",
-          "Solid timber, joined by hand",
-          "Oiled and waxed finishes that improve with age",
-          "Made to be repaired, handed down and kept",
-        ],
-      },
-    ],
-  },
+  wideImage: photos["marina-02"],
 
-  timberImage: images.timber,
+  logo,
 
-  founder: {
-    // PLACEHOLDER — replace with the founder's real name and words.
-    quote:
-      "I want someone to open a drawer we made in fifty years’ time and feel the same quiet satisfaction we felt when we fitted it.",
-    name: "Founder Name",
-    role: "Founder & Master Maker",
+  team: {
+    heading: "Talk to us directly",
+    lede: "Call Arch. Mohamed Radwan or Eng. Youssef Radwan to discuss your project.",
   },
 };

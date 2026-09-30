@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import { logo } from "@/content/images";
 import { site } from "@/content/site";
 
 export default function SiteHeader() {
@@ -65,10 +66,9 @@ export default function SiteHeader() {
       }`}
     >
       <div className="mx-auto flex w-full max-w-[1440px] items-center justify-between px-6 sm:px-10 lg:px-16">
-        <Link href="/" className="relative z-10 flex flex-col leading-none text-cream" aria-label={`${site.name} — home`}>
-          {/* LOGO: replace this wordmark with an <img> or inline SVG of the final logo. */}
-          <span className="wordmark text-xl sm:text-2xl">{site.name}</span>
-          <span className="mt-1.5 text-[0.6rem] font-medium tracking-[0.34em] text-stone uppercase">{site.descriptor}</span>
+        <Link href="/" className="relative z-10 block" aria-label={`${site.name} — home`}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={logo.wordmark} alt="" width={1088} height={264} className="h-6 w-auto sm:h-7" />
         </Link>
 
         <nav aria-label="Main" className="hidden md:block">
@@ -133,12 +133,11 @@ export default function SiteHeader() {
           </ul>
         </nav>
         <div className="space-y-2 text-sm text-stone">
-          <a href={`mailto:${site.contact.email}`} className="block hover:text-cream">
-            {site.contact.email}
-          </a>
-          <a href={site.contact.phoneHref} className="block hover:text-cream">
-            {site.contact.phone}
-          </a>
+          {site.contact.people.map((p) => (
+            <a key={p.phone} href={p.phoneHref} className="block hover:text-cream">
+              {p.name} · <span className="text-cream">{p.phone}</span>
+            </a>
+          ))}
         </div>
       </div>
     </header>

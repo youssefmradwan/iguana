@@ -1,21 +1,22 @@
 @import "tailwindcss";
 
 /*
- * Design tokens. Change the palette or fonts here and the whole site follows.
- * Contrast notes: `stone` on `ink` ≈ 8.6:1, `umber` on `cream` ≈ 7:1,
- * `brass` on `ink` ≈ 8:1, `brass-deep` on `cream` ≈ 5:1 — all pass WCAG AA.
+ * Design tokens, matched to the Oakland brand (see the company profile).
+ * Change the palette or fonts here and the whole site follows.
+ * Contrast: `stone` on `ink` ≈ 5.7:1, `umber` on `cream` ≈ 5.2:1,
+ * `brass` on `ink` ≈ 6:1, `brass-deep` on `cream` ≈ 5.5:1 — all pass WCAG AA.
  */
 @theme {
-  --color-ink: #13110f;
-  --color-charcoal: #1c1916;
-  --color-walnut: #3b2a1f;
-  --color-walnut-soft: #5a4131;
-  --color-cream: #f3eee6;
-  --color-parchment: #e7dfd2;
-  --color-stone: #b9ad9c;
-  --color-umber: #5b4f43;
-  --color-brass: #c4a56e;
-  --color-brass-deep: #7a5f30;
+  --color-ink: #2d2118; /* brand walnut — main background */
+  --color-charcoal: #221912;
+  --color-walnut: #3a2b20;
+  --color-walnut-soft: #54402f;
+  --color-cream: #f3ecdf;
+  --color-parchment: #e8dfcf;
+  --color-stone: #a8998a;
+  --color-umber: #6f6052;
+  --color-brass: #c29a62;
+  --color-brass-deep: #7a5a30;
 
   --font-serif: "Cormorant Garamond Variable", "Cormorant Garamond", Georgia, "Times New Roman", serif;
   --font-sans: "Manrope Variable", "Manrope", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
@@ -133,7 +134,7 @@
   .wood-placeholder {
     background-color: var(--color-walnut);
     background-image:
-      radial-gradient(120% 80% at 20% 10%, rgba(196, 165, 110, 0.12), transparent 60%),
+      radial-gradient(120% 80% at 20% 10%, rgba(194, 154, 98, 0.12), transparent 60%),
       repeating-linear-gradient(
         172deg,
         rgba(0, 0, 0, 0) 0px,
@@ -143,7 +144,7 @@
         rgba(255, 255, 255, 0.025) 19px,
         rgba(0, 0, 0, 0) 23px
       ),
-      linear-gradient(160deg, var(--color-walnut-soft), var(--color-walnut) 55%, #2a1e16);
+      linear-gradient(160deg, var(--color-walnut-soft), var(--color-walnut) 55%, #261c14);
   }
 }
 
@@ -213,7 +214,7 @@ html.js [data-reveal].is-visible {
 }
 
 dialog::backdrop {
-  background: rgba(19, 17, 15, 0.92);
+  background: rgba(34, 25, 18, 0.94);
 }
 
 /* Photos fade in once loaded (only when JS can reveal them again). */

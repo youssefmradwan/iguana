@@ -1,160 +1,158 @@
 /**
- * Portfolio projects. Add, remove or reorder freely — the gallery filters
- * are generated from the `category` values used here.
+ * Projects, taken from the Oakland company profile.
  *
- * `featured: true` projects also appear on the home page (first three).
+ * Add, remove or reorder freely. The gallery filters come from `sectors`,
+ * and the first image of each project is its cover. `featured: true`
+ * projects also appear on the home page (first three).
  */
-import { images } from "./images";
-import type { Category, Image } from "./types";
+import { photos, type PhotoName } from "./images";
+import type { Image, Sector } from "./types";
 
 export type Project = {
   id: string;
   title: string;
-  category: Category;
-  materials: string;
-  dimensions: string;
-  year: number;
-  location: string;
-  image: Image;
-  /** Tall images span two rows in the gallery for a more editorial rhythm. */
-  tall?: boolean;
+  sector: Sector;
+  client?: string;
+  location?: string;
+  scope?: string;
+  images: Image[];
   featured?: boolean;
 };
 
 export const portfolioIntro = {
-  eyebrow: "Portfolio",
+  eyebrow: "Projects",
   title: "Selected work",
   lede:
-    "A selection of recent commissions for private homes. Many of our clients prefer discretion, so locations are given only broadly.",
+    "Head offices, banking halls, private homes, hotel lobbies and restaurants, finished and fitted out across Greater Cairo and the North Coast.",
 };
 
-export const categories: Category[] = ["Furniture", "Kitchens", "Built-ins", "Statement pieces"];
+export const sectors: { name: Sector; summary: string; cover: Image }[] = [
+  {
+    name: "Administrative",
+    summary: "Head offices, customer service centres and banking halls, finished and fitted out across Greater Cairo.",
+    cover: photos["section-01"],
+  },
+  {
+    name: "Residential",
+    summary: "Private homes with bespoke joinery, kitchens, dressing rooms and feature timber work.",
+    cover: photos["section-02"],
+  },
+  {
+    name: "Hospitality",
+    summary: "Hotel lobbies, restaurants and poolside spaces, with feature woodwork throughout.",
+    cover: photos["section-03"],
+  },
+];
+
+const pick = (...names: PhotoName[]) => names.map((n) => photos[n]);
+const range = (prefix: string, count: number) =>
+  pick(...Array.from({ length: count }, (_, i) => `${prefix}-${String(i + 1).padStart(2, "0")}` as PhotoName));
 
 export const projects: Project[] = [
   {
-    id: "harrow-table",
-    title: "The Harrow Dining Table",
-    category: "Furniture",
-    materials: "Quarter-sawn English oak, hand-rubbed oil",
-    dimensions: "L 280 × W 105 × H 74 cm",
-    year: 2025,
-    location: "Private residence, countryside",
-    image: images.hero,
+    id: "luxoft",
+    title: "Luxoft Head Office",
+    sector: "Administrative",
+    client: "Sole Fine Works",
+    location: "Emaar Mivida",
+    images: range("luxoft", 15),
     featured: true,
   },
   {
-    id: "linden-kitchen",
-    title: "Linden House Kitchen",
-    category: "Kitchens",
-    materials: "Rift ash, honed limestone, unlacquered brass",
-    dimensions: "Island L 360 × W 120 cm",
-    year: 2025,
-    location: "Townhouse, city centre",
-    image: images.kitchen,
-    tall: true,
+    id: "dorra",
+    title: "Dorra Customer Service Office",
+    sector: "Administrative",
+    client: "Dorra Group",
+    location: "Capital Business Park",
+    images: range("dorra", 4),
+  },
+  {
+    id: "excel",
+    title: "Excel Systems Head Office",
+    sector: "Administrative",
+    client: "Dorra Group",
+    location: "Capital Business Park",
+    images: [...range("excel", 3), photos["section-01"]],
+  },
+  {
+    id: "qorrect",
+    title: "Qorrect Head Office",
+    sector: "Administrative",
+    client: "Qorrect",
+    location: "Dokki",
+    images: range("qorrect", 4),
+  },
+  {
+    id: "nbe",
+    title: "National Bank of Egypt",
+    sector: "Administrative",
+    client: "National Bank of Egypt",
+    location: "El-Azhar",
+    images: range("nbe", 4),
+  },
+  {
+    id: "heliopolis",
+    title: "Private Residence, Heliopolis",
+    sector: "Residential",
+    client: "Private client",
+    location: "Heliopolis",
+    images: [...range("heliopolis", 6), photos["section-02"]],
+  },
+  {
+    id: "zayed",
+    title: "Private Residence, Sheikh Zayed",
+    sector: "Residential",
+    client: "Private client",
+    location: "Sheikh Zayed",
+    images: range("zayed", 3),
+  },
+  {
+    id: "marina",
+    title: "Marina Coastal Villa",
+    sector: "Residential",
+    client: "ARCADE",
+    location: "Marina, North Coast",
+    images: range("marina", 9),
     featured: true,
   },
   {
-    id: "hollis-library",
-    title: "Hollis Library Wall",
-    category: "Built-ins",
-    materials: "Black walnut, bronze ladder rail",
-    dimensions: "W 640 × H 390 cm",
-    year: 2024,
-    location: "Converted chapel",
-    image: images.builtIn,
+    id: "doors",
+    title: "Residential Villa, Entrance Doors",
+    sector: "Residential",
+    client: "Private client",
+    scope: "Pivot and wooden doors",
+    images: range("doors", 6),
+  },
+  {
+    id: "holidayinn",
+    title: "Holiday Inn Cairo Maadi, Restaurant",
+    sector: "Hospitality",
+    client: "ASASS Construction",
+    location: "Maadi, Cairo",
+    images: [...range("holidayinn", 2), photos["section-03"]],
+  },
+  {
+    id: "dusit",
+    title: "Dusit Thani LakeView, Lobby",
+    sector: "Hospitality",
+    client: "Dusit Thani LakeView",
+    location: "New Cairo",
+    scope: "Woodwork",
+    images: range("dusit", 5),
     featured: true,
   },
   {
-    id: "wren-stool",
-    title: "Wren Stool",
-    category: "Furniture",
-    materials: "Cherry, wedged through-tenons",
-    dimensions: "Ø 34 × H 46 cm",
-    year: 2024,
-    location: "Edition of 12",
-    image: images.chair,
-    tall: true,
-  },
-  {
-    id: "marlow-armchair",
-    title: "Marlow Reading Chair",
-    category: "Statement pieces",
-    materials: "Fumed oak, vegetable-tanned leather",
-    dimensions: "W 78 × D 82 × H 88 cm",
-    year: 2024,
-    location: "Private collection",
-    image: images.armchair,
-  },
-  {
-    id: "orchard-kitchen",
-    title: "Orchard Lane Kitchen",
-    category: "Kitchens",
-    materials: "Pale oak, zellige tile, oiled finish",
-    dimensions: "Galley L 540 cm",
-    year: 2023,
-    location: "Farmhouse restoration",
-    image: images.kitchenAlt,
-  },
-  {
-    id: "ashby-sideboard",
-    title: "Ashby Sideboard",
-    category: "Furniture",
-    materials: "Walnut, hand-cut dovetails, leather pulls",
-    dimensions: "L 210 × D 48 × H 72 cm",
-    year: 2023,
-    location: "Coastal home",
-    image: images.sideboard,
-  },
-  {
-    id: "fenwick-study",
-    title: "Fenwick Study",
-    category: "Built-ins",
-    materials: "Oak panelling, walnut desk inlay",
-    dimensions: "Room 4.2 × 3.6 m",
-    year: 2023,
-    location: "Georgian townhouse",
-    image: images.study,
-    tall: true,
-  },
-  {
-    id: "eldon-bed",
-    title: "Eldon Bed",
-    category: "Furniture",
-    materials: "Ash, woven linen headboard",
-    dimensions: "W 190 × L 220 × H 110 cm",
-    year: 2022,
-    location: "Private residence",
-    image: images.bedroom,
-  },
-  {
-    id: "single-tree-table",
-    title: "Single-Tree Boardroom Table",
-    category: "Statement pieces",
-    materials: "One elm tree, butterfly keys, blackened steel",
-    dimensions: "L 520 × W 140 × H 75 cm",
-    year: 2022,
-    location: "Family office",
-    image: images.dining,
-  },
-  {
-    id: "garden-room",
-    title: "Garden Room Joinery",
-    category: "Built-ins",
-    materials: "Larch, window seat with storage",
-    dimensions: "W 460 × H 240 cm",
-    year: 2022,
-    location: "Country house",
-    image: images.living,
-  },
-  {
-    id: "lounge-table",
-    title: "Low Lounge Table",
-    category: "Statement pieces",
-    materials: "Bog oak, hand-carved base",
-    dimensions: "Ø 120 × H 34 cm",
-    year: 2021,
-    location: "Private residence",
-    image: images.lounge,
+    id: "lexies",
+    title: "Lexie’s, Dusit Thani LakeView",
+    sector: "Hospitality",
+    client: "Lexie’s",
+    location: "New Cairo",
+    scope: "Woodwork",
+    images: range("lexies", 2),
   },
 ];
+
+/** Client names shown on the home page, in profile order, without duplicates. */
+export const clients = Array.from(
+  new Set(projects.map((p) => p.client).filter((c): c is string => !!c && c !== "Private client")),
+);

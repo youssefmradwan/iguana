@@ -1,82 +1,94 @@
 /**
- * Placeholder photography.
+ * Photography catalogue — every photo on the site is listed here once.
  *
- * Every image on the site is referenced from here (or from a content file),
- * so swapping in real photography is a matter of:
- *   1. dropping the files into /public/images/
- *   2. replacing the `src` below with e.g. "/images/hero-dining-table.jpg"
- *   3. updating the `alt` text to describe the real photo
+ * Files live in /public/images/projects/ (full size, max 1920px) with a
+ * 900px-wide copy in /public/images/projects/sm/ used on small screens.
  *
- * If an image fails to load, <Photo /> shows a warm, wood-toned block
- * instead of a broken-image icon.
+ * To add a photo: drop both sizes into those folders, then add a line below
+ * with its pixel size and a short description of what it shows (alt text).
  */
 import type { Image } from "./types";
 
-const unsplash = (id: string) => `https://images.unsplash.com/photo-${id}`;
+function photo(name: string, width: number, height: number, alt: string): Image {
+  return { src: `/images/projects/${name}.jpg`, width, height, alt };
+}
 
-export const images = {
-  hero: {
-    src: unsplash("1533090481720-856c6e3c1fdc"),
-    alt: "A solid timber dining table set in a softly lit, minimal room",
-  },
-  workshop: {
-    src: unsplash("1504148455328-c376907d081c"),
-    alt: "Hand tools laid out on a well-used workbench",
-  },
-  workshopDetail: {
-    src: unsplash("1588854337236-6889d631faa8"),
-    alt: "A craftsman planing a board by hand in the workshop",
-  },
-  timber: {
-    src: unsplash("1452860606245-08befc0ff44b"),
-    alt: "Stacked planks of air-drying hardwood showing the end grain",
-  },
-  kitchen: {
-    src: unsplash("1556911220-bff31c812dba"),
-    alt: "A kitchen with timber cabinetry and a stone worktop",
-  },
-  builtIn: {
-    src: unsplash("1595428774223-ef52624120d2"),
-    alt: "Floor-to-ceiling fitted shelving in a quiet living room",
-  },
-  chair: {
-    src: unsplash("1503602642458-232111445657"),
-    alt: "A simple hand-made wooden stool photographed against a pale wall",
-  },
-  interior: {
-    src: unsplash("1618221195710-dd6b41faaea6"),
-    alt: "A calm living space furnished with natural materials",
-  },
-  dining: {
-    src: unsplash("1617806118233-18e1de247200"),
-    alt: "A dining room with a long timber table and pendant light",
-  },
-  living: {
-    src: unsplash("1493663284031-b7e3aefcae8e"),
-    alt: "A living room with low timber furniture and warm light",
-  },
-  bedroom: {
-    src: unsplash("1519710164239-da123dc03ef4"),
-    alt: "A bedroom with a timber headboard and linen bedding",
-  },
-  kitchenAlt: {
-    src: unsplash("1556909114-f6e7ad7d3136"),
-    alt: "A kitchen island in pale oak with integrated storage",
-  },
-  lounge: {
-    src: unsplash("1586023492125-27b2c045efd7"),
-    alt: "A lounge chair beside a low side table in a sunlit room",
-  },
-  armchair: {
-    src: unsplash("1567538096630-e0c55bd6374c"),
-    alt: "A sculptural armchair with a timber frame",
-  },
-  study: {
-    src: unsplash("1524758631624-e2822e304c36"),
-    alt: "A study with a writing desk and fitted joinery",
-  },
-  sideboard: {
-    src: unsplash("1484101403633-562f891dc89a"),
-    alt: "A long, low timber sideboard beneath a window",
-  },
+export const photos = {
+  "brand-01": photo("brand-01", 1230, 1161, "Black-and-white close-up of a craftsman's hands shaping timber at a machine"),
+  "doors-01": photo("doors-01", 1303, 1620, "Tall timber-slatted pivot door standing open in a stone-clad entrance"),
+  "doors-02": photo("doors-02", 1298, 1620, "Vertical timber-slat entrance door beside a grey stone wall"),
+  "doors-03": photo("doors-03", 1298, 1620, "Honey-toned timber entrance door framed by plants on a terracotta façade"),
+  "doors-04": photo("doors-04", 1298, 1620, "Timber entrance door beneath a slatted timber canopy"),
+  "doors-05": photo("doors-05", 1161, 1620, "Horizontal-plank timber entrance door beside tropical planting"),
+  "doors-06": photo("doors-06", 1219, 1620, "Close view of a horizontal-plank walnut door and its frame"),
+  "dorra-01": photo("dorra-01", 1037, 908, "Reception lounge with a circular slatted-timber ceiling feature and walnut wall panels"),
+  "dorra-02": photo("dorra-02", 1043, 909, "Walnut reception desk with a marble end panel"),
+  "dorra-03": photo("dorra-03", 1037, 895, "Waiting area with walnut wall cladding and a grey sofa"),
+  "dorra-04": photo("dorra-04", 1049, 898, "Walnut-panelled wall with flush integrated doors behind a leather sofa"),
+  "dusit-01": photo("dusit-01", 1800, 1171, "Hotel lobby with timber-slatted ceiling and wall cladding over grey marble"),
+  "dusit-02": photo("dusit-02", 1162, 1620, "Tall timber-slatted portal framing an artwork above a fireplace"),
+  "dusit-03": photo("dusit-03", 1218, 1620, "Floor-to-ceiling timber slats rising above a glass display counter"),
+  "dusit-04": photo("dusit-04", 1218, 1620, "Timber-lined niche with a flower arrangement between marble walls"),
+  "dusit-05": photo("dusit-05", 1306, 1620, "Slatted timber screen and shelving in a double-height lobby"),
+  "excel-01": photo("excel-01", 771, 759, "Corridor lined with full-height walnut panels and flush doors"),
+  "excel-02": photo("excel-02", 771, 757, "Reception with a marble counter framed in walnut panelling"),
+  "excel-03": photo("excel-03", 771, 759, "Boardroom with a long timber table and walnut wall panelling"),
+  "heliopolis-01": photo("heliopolis-01", 1434, 957, "Living and dining room with a timber dining table and cove lighting"),
+  "heliopolis-02": photo("heliopolis-02", 1024, 684, "Living room with a walnut media unit and the dining area beyond"),
+  "heliopolis-03": photo("heliopolis-03", 1024, 684, "Close view of a walnut sideboard with brass handles"),
+  "heliopolis-04": photo("heliopolis-04", 1024, 684, "Dining area with a walnut sideboard and timber table"),
+  "heliopolis-05": photo("heliopolis-05", 1639, 1094, "Kitchen with pale timber cabinets and a speckled stone splashback"),
+  "heliopolis-06": photo("heliopolis-06", 684, 1024, "Walnut wardrobe with glass doors and internal drawers"),
+  "holidayinn-01": photo("holidayinn-01", 1152, 774, "Restaurant terrace with a timber-slatted ceiling overlooking the water"),
+  "holidayinn-02": photo("holidayinn-02", 1133, 685, "Rooftop pool terrace at dusk"),
+  "lexies-01": photo("lexies-01", 1290, 1286, "Restaurant with faceted timber and brass wall panels above dining tables"),
+  "lexies-02": photo("lexies-02", 1262, 1286, "Marble fireplace wall framed by faceted timber panels"),
+  "luxoft-01": photo("luxoft-01", 1179, 785, "Reception with a white desk, Luxoft signage and pale timber flooring"),
+  "luxoft-02": photo("luxoft-02", 1920, 1280, "Reception lounge with sofas and illuminated wall graphics"),
+  "luxoft-03": photo("luxoft-03", 944, 621, "Corridor with teal cabinetry and a planted breakout area"),
+  "luxoft-04": photo("luxoft-04", 960, 640, "Timber locker wall along an office corridor with planters"),
+  "luxoft-05": photo("luxoft-05", 1024, 683, "Kitchenette with teal cabinets beside a timber-framed opening"),
+  "luxoft-06": photo("luxoft-06", 1920, 1280, "Office corridor with timber-framed glass partitions"),
+  "luxoft-07": photo("luxoft-07", 1920, 1280, "Open-plan workspace with green desk screens"),
+  "luxoft-08": photo("luxoft-08", 1920, 1280, "Open-plan desks beneath exposed ceiling services"),
+  "luxoft-09": photo("luxoft-09", 1156, 756, "Meeting room with a timber table and slatted ceiling feature"),
+  "luxoft-10": photo("luxoft-10", 1920, 1280, "Meeting room with a purple feature wall and round table"),
+  "luxoft-11": photo("luxoft-11", 1200, 800, "Staff café with timber flooring and a teal ceiling feature"),
+  "luxoft-12": photo("luxoft-12", 1920, 1280, "Bright café seating area under a teal ceiling feature"),
+  "luxoft-13": photo("luxoft-13", 1920, 1280, "Lounge with a timber-slatted screen and planter"),
+  "luxoft-14": photo("luxoft-14", 1680, 1120, "Corridor with timber wall panels and colourful artwork"),
+  "luxoft-15": photo("luxoft-15", 1920, 1280, "Timber-framed openings beside colourful wall graphics"),
+  "marina-01": photo("marina-01", 1800, 980, "Villa living room with walnut wall panels and cove lighting"),
+  "marina-02": photo("marina-02", 1800, 1229, "Entrance hall with a slatted brass-and-timber screen and round mirror"),
+  "marina-03": photo("marina-03", 1800, 1120, "Staircase with timber treads and walnut wall panelling"),
+  "marina-04": photo("marina-04", 1800, 1083, "Living room with a walnut media wall and ceiling feature"),
+  "marina-05": photo("marina-05", 1296, 1434, "Kitchen and bar framed by a lit walnut portal"),
+  "marina-06": photo("marina-06", 1800, 1083, "Bedroom with walnut wall cladding and a built-in TV unit"),
+  "marina-07": photo("marina-07", 1800, 981, "Master bedroom with a timber-panelled headboard wall and wardrobes"),
+  "marina-08": photo("marina-08", 1800, 1067, "Twin bedroom with a timber headboard and navy bedding"),
+  "marina-09": photo("marina-09", 1800, 1144, "Bedroom with timber headboard panelling and a pendant light"),
+  "nbe-01": photo("nbe-01", 1280, 960, "Bank hall with timber-faced teller counters"),
+  "nbe-02": photo("nbe-02", 640, 480, "National Bank of Egypt branch entrance façade"),
+  "nbe-03": photo("nbe-03", 1280, 960, "Bank customer area with timber counters and glass partitions"),
+  "nbe-04": photo("nbe-04", 874, 800, "Frosted-glass entrance doors with a patterned manifestation in a red frame"),
+  "qorrect-01": photo("qorrect-01", 1280, 960, "Open workspace with timber desks and window blinds"),
+  "qorrect-02": photo("qorrect-02", 874, 896, "Long corridor with timber-clad walls and glass office fronts"),
+  "qorrect-03": photo("qorrect-03", 896, 672, "Open-plan office with white desks and timber-framed glazing"),
+  "qorrect-04": photo("qorrect-04", 858, 809, "Glass-walled office with a timber desk and mesh chairs"),
+  "section-01": photo("section-01", 1284, 1269, "Reception with a slatted walnut screen and marble-topped desk"),
+  "section-02": photo("section-02", 1229, 821, "Walnut built-in wardrobe with glass-fronted doors"),
+  "section-03": photo("section-03", 960, 640, "Restaurant seating under a timber pergola ceiling"),
+  "zayed-01": photo("zayed-01", 1435, 1076, "Stair hall with a vertical timber-slat balustrade screen"),
+  "zayed-02": photo("zayed-02", 615, 820, "Timber-lined staircase with warm lighting"),
+  "zayed-03": photo("zayed-03", 615, 820, "Vertical timber slats screening a planted light well"),
 } satisfies Record<string, Image>;
+
+export type PhotoName = keyof typeof photos;
+
+export const logo = {
+  /** Full logo (mark + wordmark) on the brand walnut background. */
+  full: "/brand/oakland-logo.jpg",
+  /** Transparent cream PNGs, for placing over photos or dark backgrounds. */
+  mark: "/brand/oakland-mark.png",
+  wordmark: "/brand/oakland-wordmark.png",
+};

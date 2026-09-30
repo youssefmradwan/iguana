@@ -126,7 +126,7 @@ export default function CommissionForm() {
           <TextField label="Full name" name="name" required autoComplete="name" value={values.name} error={shown("name")} onChange={onChange} onBlur={onBlur} />
           <TextField label="Email" name="email" type="email" required autoComplete="email" value={values.email} error={shown("email")} onChange={onChange} onBlur={onBlur} />
           <TextField label="Phone" name="phone" type="tel" autoComplete="tel" hint="Optional" value={values.phone} error={shown("phone")} onChange={onChange} onBlur={onBlur} />
-          <TextField label="Project location" name="location" autoComplete="address-level2" hint="Optional — town or region" value={values.location} error={shown("location")} onChange={onChange} onBlur={onBlur} />
+          <TextField label="Project location" name="location" autoComplete="address-level2" hint="Optional — area or city" value={values.location} error={shown("location")} onChange={onChange} onBlur={onBlur} />
         </div>
       </fieldset>
 
@@ -142,7 +142,7 @@ export default function CommissionForm() {
           id="description"
           label="Tell us about the project"
           required
-          hint="The room, how you’ll use the piece, materials you love, anything you’ve seen that inspires you."
+          hint="The space and its size, the scope of work, your role (owner, designer or contractor), and any drawings or references."
           error={shown("description")}
         >
           {(describedBy) => (
@@ -163,8 +163,8 @@ export default function CommissionForm() {
 
         <FieldShell
           id="files"
-          label="Reference images"
-          hint={`Optional — up to ${upload.maxFiles} files, ${upload.maxSizeMb} MB each (${upload.acceptLabel}). Photos of the space, sketches or inspiration.`}
+          label="Drawings & references"
+          hint={`Optional — up to ${upload.maxFiles} files, ${upload.maxSizeMb} MB each (${upload.acceptLabel}). Drawings, photos of the site or references.`}
           error={shown("files")}
         >
           {(describedBy) => (
