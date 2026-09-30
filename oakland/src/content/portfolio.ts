@@ -35,7 +35,7 @@ export const sectors: { name: Sector; summary: string; cover: Image }[] = [
   {
     name: "Residential",
     summary: "Bespoke joinery, kitchens, dressing rooms, entrance doors and feature timber work for private homes.",
-    cover: photos["section-02"],
+    cover: photos["doors-03"],
   },
   {
     name: "Hospitality",
